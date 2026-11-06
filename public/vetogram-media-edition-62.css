@@ -249,7 +249,7 @@ body:has(#playerBar) .licensed-home-tracks{
 }
 body:has(#playerBar) .licensed-home-card{
   display:flex;align-items:center;gap:11px;min-width:0;
-  background:#1b202c;border:1px solid rgba(200,193,214,.10);
+  background:#151518;border:1px solid rgba(228,204,217,.13);
   padding:11px;border-radius:13px;
 }
 body:has(#playerBar) .licensed-home-art{
@@ -286,11 +286,29 @@ body:has(#playerBar) .licensed-home-more{
 }
 
 
-/* Playback-first release: non-licensed film/discovery tabs are not navigable. */
-body:has(#cinemaPlayer) :is([data-tab="foreign"],#cinemaForeignShelf,#cinemaForeignHub,#cinemaFranchises){
+/* Playback-first home hides non-playable promotions; the separate foreign
+ * discovery catalog stays visible with a truthful rights/availability label. */
+body:has(#cinemaPlayer) :is(#cinemaForeignShelf,#cinemaFranchises){
   display:none!important;
 }
 /* Hide dead empty player cards; never make the actor hunt for an external link. */
 body:has(#cinemaPlayer) .cinema-watch-card{
   position:relative;cursor:pointer;
+}
+
+/* Original editorial thumbnails for fully licensed CC BY recordings.
+   No synthetic publisher/artist covers are represented as authentic artwork. */
+body:has(#playerBar) .licensed-home-art.licensed-home-art-designed{
+  position:relative;isolation:isolate;overflow:hidden;
+  background:linear-gradient(145deg,hsl(var(--art-hue,330) 24% 26%),#121216 84%);
+  border:1px solid #ffffff20;border-radius:9px;
+  box-shadow:inset 3px 0 0 #f2a4bb34;
+}
+body:has(#playerBar) .licensed-home-art-designed::before{
+  content:"";position:absolute;inset:7px;border:1px solid #ffffff25;border-radius:50%;
+  box-shadow:0 0 0 5px #ffffff06,0 0 0 10px #ffffff04;
+}
+body:has(#playerBar) .licensed-home-initial{
+  position:relative;z-index:1;font-size:22px;line-height:1;font-weight:650;
+  color:#ffe4ed;font-family:Georgia,serif;
 }

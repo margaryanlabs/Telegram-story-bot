@@ -32,7 +32,7 @@
 #vetogram.vetogram-universe .v61-item-go{color:var(--v6-accent);font-size:18px}
 #vetogram.vetogram-universe .v61-item-progress{display:block;width:100%;height:3px;border-radius:3px;background:var(--v6-line);overflow:hidden;margin-top:4px}
 #vetogram.vetogram-universe .v61-item-progress i{display:block;height:100%;background:var(--v6-accent)}
-#vetogram.vetogram-universe .v61-home .v6-media-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#vetogram.vetogram-universe .v61-home .v6-media-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 #vetogram.vetogram-universe .v61-home .v6-world{min-height:235px;padding:17px;border-radius:19px}
 #vetogram.vetogram-universe .v61-home .v6-world-art{height:91px;margin:8px 0 10px;transform:scale(.69)}
 #vetogram.vetogram-universe .v61-home .v6-world-copy>strong{font-size:23px}
@@ -64,10 +64,10 @@
  #vetogram.vetogram-universe .v61-hero{padding:14px 0 21px}
  #vetogram.vetogram-universe .v61-hero h1{font-size:39px!important;margin:17px 0 8px!important}
  #vetogram.vetogram-universe .v61-hero p{font-size:12px}
- #vetogram.vetogram-universe .v61-home .v6-media-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
- #vetogram.vetogram-universe .v61-home .v6-world{display:flex;flex-direction:column;min-height:165px;padding:11px;border-radius:14px}
+ #vetogram.vetogram-universe .v61-home .v6-media-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ #vetogram.vetogram-universe .v61-home .v6-world{display:flex;flex-direction:column;min-height:190px;padding:11px;border-radius:14px}
  #vetogram.vetogram-universe .v61-home .v6-world-index{font-size:8px}
- #vetogram.vetogram-universe .v61-home .v6-world-art{height:55px;width:100%;min-height:55px;margin:3px 0;transform:scale(.38);transform-origin:center}
+ #vetogram.vetogram-universe .v61-home .v6-world-art{height:78px;width:100%;min-height:78px;margin:3px 0;transform:scale(.60);transform-origin:center}
  #vetogram.vetogram-universe .v61-home .v6-world-copy{display:flex;gap:5px;margin-top:auto;align-self:stretch;min-width:0}
  #vetogram.vetogram-universe .v61-home .v6-world-copy>strong{font-size:15px;letter-spacing:-.04em}
  #vetogram.vetogram-universe .v61-home .v6-world-copy>small{display:none}

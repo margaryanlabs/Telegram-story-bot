@@ -14,6 +14,8 @@
   function recover() {
     if(!active)return;
     const {card,parent,next}=active;
+    const game=card.dataset?.vpGame;
+    if(game&&typeof CustomEvent!=='undefined')window.dispatchEvent?.(new CustomEvent('vetogram:game-close',{detail:{game}}));
     if(parent?.insertBefore)parent.insertBefore(card,next?.parentNode===parent?next:null);
     card.classList.remove('vp-game-in-dialog');
     active=null;
@@ -23,8 +25,16 @@
   }
   function close() {
     if(!active)return;
-    if(dialog.open && typeof dialog.close==='function') dialog.close();
-    else {dialog.hidden=true;dialog.removeAttribute?.('open');recover();}
+    // Native <dialog> dispatches "close" asynchronously in some WebViews.
+    // Restore the game immediately so a second tap or screen switch cannot
+    // leave a detached card or a running local game behind.
+    try {
+      if(dialog.open && typeof dialog.close==='function')dialog.close();
+      else {dialog.hidden=true;dialog.removeAttribute?.('open');}
+    } catch {
+      dialog.hidden=true;dialog.removeAttribute?.('open');
+    }
+    recover(); // safe if the browser already dispatched "close" synchronously
   }
   function open(card,button) {
     if(active)close();
@@ -40,6 +50,7 @@
       else dialog.setAttribute('open','');
       document.body?.classList?.add('vp-game-running');
       closeButton.focus?.();
+      if(typeof CustomEvent!=='undefined')window.dispatchEvent?.(new CustomEvent('vetogram:game-open',{detail:{game:card.dataset?.vpGame}}));
     }catch{
       // Dialog unsupported or blocked: restore the game without corrupting the hub.
       dialog.hidden=true;

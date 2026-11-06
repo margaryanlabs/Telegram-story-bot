@@ -46,11 +46,14 @@
       if(window.VetogramCinema?.openFilm)opened=window.VetogramCinema.openFilm(data.id);
       else if(window.VetogramBooks?.openSavedByKey)opened=window.VetogramBooks.openSavedByKey(data.id);
       else if(window.VetogramMusic?.openSavedById)opened=window.VetogramMusic.openSavedById(data.id);
-      Promise.resolve(opened).then(ok=>send({type:'open-item-status',ok:ok===true,requestId}))
-        .catch(()=>send({type:'open-item-status',ok:false,requestId}));
+      Promise.resolve(opened).then(result=>send({type:'open-item-status',
+        ok:result===true,status:result==='search'?'search':result===true?'opened':'unavailable',requestId}))
+        .catch(()=>send({type:'open-item-status',ok:false,status:'unavailable',requestId}));
     }catch{send({type:'open-item-status',ok:false,requestId});}
   }
   if(data.action==='visible'&&!data.visible){
+   // Hidden reader keeps its page/position, but cancels speculative chapter fetches.
+   window.VetogramBooks?.pauseBackgroundWork?.();
    video?.pause();
    // Pause official embedded video through the existing controller so hidden
    // frames cannot keep a film playing behind Chats. Reading state is retained.
@@ -67,7 +70,7 @@
  });
  document.querySelectorAll('a[href="/"],a[href="/studio.html"],a.back-link').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();send({type:'navigate',target:'hub'});}));
  for(const event of ['playing','pause','ended','timeupdate','loadedmetadata','waiting','error','emptied'])audio?.addEventListener(event,update);
- document.getElementById('cinemaDetailsWatch')?.addEventListener('click',()=>send({type:'video-playing'}));
+ // Only native video 'playing' or validated provider start may pause music.
  video?.addEventListener('playing',()=>send({type:'video-playing'}));
  window.addEventListener('vetogram:cinema-playing',()=>send({type:'video-playing'}));
  function sendMusicLibrary(){

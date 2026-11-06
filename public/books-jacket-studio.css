@@ -3,7 +3,7 @@
    Keep branded chrome restrained so books — and full readable titles — lead. */
 :root { --v-obsidian:#090b11; --v-line:rgba(242,245,251,.105); --v-silver:#e5e8ef; --v-scarlet:#e53350; }
 .book-grid { gap:clamp(11px,1.7vw,25px)!important; }
-.book {padding:10px!important;background:transparent!important;border:1px solid transparent!important;
+.book {padding:9px!important;background:#0f0f12!important;border:1px solid #ffffff17!important;
  box-shadow:none!important;transform:none;transition:transform .3s ease!important;isolation:isolate}
 .book:hover,.book:focus-within {transform:translateY(-5px)!important;box-shadow:none!important}
 .book-main {position:relative;outline-offset:5px}
@@ -52,8 +52,8 @@
 .jacket-folio {font:850 1em/1.2 system-ui,sans-serif!important;letter-spacing:.2em}
 .jacket-edition {text-align:right;font:650 .83em/1.1 system-ui,sans-serif!important;letter-spacing:.08em;opacity:.77}
 .jacket-title {position:relative;z-index:4;display:block!important;margin:auto 9% 0!important;max-width:85%!important;
- font:850 clamp(18px,2.12vw,32px)/1.02 "Arial Narrow",Impact,"Arial Black",system-ui,sans-serif!important;
- text-transform:uppercase;letter-spacing:-.052em!important;color:var(--cl)!important;
+ font:700 clamp(18px,2.12vw,31px)/1.12 Georgia,"Times New Roman",serif!important;
+ text-transform:none;letter-spacing:-.028em!important;color:var(--cl)!important;
  text-align:left!important;text-wrap:balance;overflow-wrap:anywhere;max-height:5.1em;overflow:hidden;text-shadow:0 3px 22px #0007}
 .jacket-title[data-length="medium"]{font-size:clamp(16px,1.83vw,26px)!important;line-height:1.06!important}
 .jacket-title[data-length="long"]{font-size:clamp(14px,1.5vw,21px)!important;line-height:1.08!important;max-height:7.6em}
@@ -147,8 +147,8 @@
  background:#0b0f18c9!important;backdrop-filter:blur(9px);color:#fff!important}
 @media(min-width:1060px){.book-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}}
 @media(min-width:700px) and (max-width:1059px){.book-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
-@media(min-width:450px) and (max-width:699px){.book-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
-@media(max-width:449px){.book-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+@media(min-width:601px) and (max-width:699px){.book-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:600px){.book-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
  .book{padding:5px!important}.book-card-label{margin:11px 1px 6px;font-size:8px}
  .book .book-cover.editorial-cover{aspect-ratio:.71}
  .jacket-strap{font-size:6px!important}.jacket-title{font-size:clamp(17px,5.15vw,25px)!important}
@@ -332,3 +332,7 @@
 @media(prefers-reduced-motion:reduce){
  .reader[data-theme="dark"] .reader-bottom button,.reader[data-theme="dark"] .reader-top button,
  .reader[data-theme="dark"] .flow-paragraph{transition:none!important}}
+
+/* Reduce decorative motif dominance when the catalog has no approved original cover. */
+.book-cover.editorial-cover:not(.has-source-art) .jacket-visual{opacity:.18;filter:saturate(.5)}
+.book-cover.editorial-cover:not(.has-source-art) .jacket-title{text-shadow:0 2px 14px #0006}

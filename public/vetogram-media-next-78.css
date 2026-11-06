@@ -1,0 +1,169 @@
+/* VETOGRAM 7.8 — authentic Media UX across the three existing module documents.
+ * Consistent layout, different accents; no fake cover art, player or catalog.
+ */
+.v78-portal{
+ --v78-accent:#d6d6d9;--v78-ink:#f4f2f1;--v78-soft:#9da3ae;
+ position:relative;isolation:isolate;overflow:hidden;min-width:0;
+ margin:18px 0 35px;padding:clamp(20px,3vw,36px);
+ border:1px solid rgba(255,255,255,.13);border-radius:22px;
+ background:radial-gradient(ellipse 46% 90% at 95% 0%,rgba(255,255,255,.055),transparent 80%),
+ linear-gradient(120deg,#15171b,#101116);
+ color:var(--v78-ink);
+ box-shadow:inset 0 1px rgba(255,255,255,.04);
+}
+.v78-portal::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:repeating-linear-gradient(110deg,transparent 0 42px,rgba(255,255,255,.013) 43px 44px);}
+.v78-cinema-portal{--v78-accent:#e4d5af;background:radial-gradient(ellipse 70% 100% at 90% 0%,rgba(193,146,99,.14),transparent 78%),linear-gradient(120deg,#1c191a,#121315)}
+.v78-music-portal{--v78-accent:#d6c4eb;background:radial-gradient(ellipse 70% 100% at 90% 0%,rgba(131,110,183,.16),transparent 78%),linear-gradient(120deg,#1d1924,#131219)}
+.v78-books-portal{--v78-accent:#d5e8ce;background:radial-gradient(ellipse 70% 100% at 90% 0%,rgba(131,168,133,.15),transparent 78%),linear-gradient(120deg,#18221e,#121916)}
+.v78-kicker{display:block;font:760 10px/1.5 system-ui;letter-spacing:.19em;color:var(--v78-accent);margin-bottom:10px}
+.v78-portal-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin:0 0 18px}
+.v78-portal-heading h2{font:760 clamp(24px,3vw,37px)/1.1 system-ui;letter-spacing:-.057em;color:#fff;margin:0 0 9px}
+.v78-portal-heading p{font:450 12px/1.65 system-ui;color:#abaeba;max-width:620px;margin:0}
+.v78-portal-mark{flex-shrink:0;color:var(--v78-accent);font:700 clamp(27px,4vw,49px)/1 system-ui;opacity:.55;letter-spacing:-.09em}
+.v78-action-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;min-width:0}
+.v78-action{
+ display:flex;align-items:center;gap:10px;min-width:0;padding:16px;
+ border:1px solid rgba(255,255,255,.16);border-radius:15px;
+ background:rgba(255,255,255,.055);color:#f2f3f4;text-align:left;cursor:pointer;
+ transition:transform .16s,border-color .16s,background .16s;
+}
+.v78-action:first-child{background:rgba(255,255,255,.12)}
+.v78-action:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.42);transform:translateY(-2px)}
+.v78-action:active{transform:scale(.98)}
+.v78-action:focus-visible{outline:2px solid var(--v78-accent);outline-offset:3px}
+.v78-action-symbol{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(255,255,255,.07);color:var(--v78-accent);font:750 20px/1 system-ui}
+.v78-action-body{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.v78-action-body strong{font:720 14px/1.2 system-ui;color:#f8f8f7}
+.v78-action-body small{font:450 10px/1.5 system-ui;color:#a2a9ac;white-space:normal}
+.v78-action-arrow{flex-shrink:0;color:var(--v78-accent);font-size:16px}
+.v78-status{display:flex;align-items:center;gap:9px;margin:17px 1px 0;color:#aeb4b9;font:450 11px/1.55 system-ui;min-height:16px}
+.v78-status-dot{width:6px;height:6px;display:inline-block;flex:0 0 6px;background:var(--v78-accent);border-radius:50%;box-shadow:0 0 9px var(--v78-accent)}
+.v78-now{margin-top:15px;border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:13px 16px;background:rgba(0,0,0,.2);display:flex;align-items:center;gap:12px}
+.v78-now-art{width:37px;height:37px;flex-shrink:0;border:1px solid rgba(255,255,255,.2);border-radius:10px;display:grid;place-items:center;color:var(--v78-accent);font-size:19px}
+.v78-now-info{flex:1;display:flex;flex-direction:column;min-width:0}
+.v78-now-info strong{color:#f4f4f5;font:710 12px/1.3 system-ui;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v78-now-info small{color:#9da6ac;font:450 10px/1.3 system-ui;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v78-now-toggle{border:1px solid rgba(255,255,255,.25);border-radius:50%;color:#14151b;background:var(--v78-accent);width:38px;height:38px;display:grid;place-items:center;font-size:13px;cursor:pointer}
+.v78-now-toggle[disabled]{opacity:.45;cursor:not-allowed}
+.v78-cinema-portal{margin-left:auto;margin-right:auto;max-width:1336px}
+.cinema-hero.hidden + .v78-cinema-portal{display:none}
+.v78-books-portal{max-width:1270px;margin-inline:auto}
+.v78-music-portal{margin-left:0;margin-right:0;max-width:1360px}
+#reader:not([hidden]) ~ .v78-portal{display:none}
+@media(max-width:860px){
+ .v78-action-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .v78-action{padding:13px 14px}
+ .v78-portal-heading h2{font-size:26px}
+ .v78-portal-mark{font-size:34px}
+}
+@media(max-width:600px){
+ .v78-portal{border-radius:16px;margin:12px 0 24px;padding:18px 15px}
+ .v78-action-grid{grid-template-columns:1fr;gap:8px}
+ .v78-portal-heading{align-items:start}
+ .v78-portal-heading h2{font-size:24px}
+ .v78-portal-mark{display:none}
+ .v78-action-symbol{width:37px;height:37px;flex-basis:37px;font-size:17px}
+ .v78-action-body strong{font-size:13px}
+ .v78-status{font-size:10px}
+ .v78-now{padding:10px}
+}
+@media(prefers-reduced-motion:reduce){.v78-action{transition:none!important}}
+
+/* Native catalogs and players: finish each actual module, not just its hero. */
+body:has(#cinemaHero) #cinemaTabs{display:flex;gap:6px;align-items:center;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;scroll-snap-type:x proximity;max-width:100%}
+body:has(#cinemaHero) #cinemaTabs .cinema-tab{flex-shrink:0;scroll-snap-align:start;min-height:43px;border-radius:10px}
+body:has(#cinemaHero) #cinemaTabs .cinema-tab.active{background:#ffffff22;border-color:#ffffff33;color:#fff}
+body:has(#cinemaHero) .cinema-card{border-radius:14px!important;overflow:hidden;border:1px solid #ffffff18!important;background:#131316!important;box-shadow:none!important}
+body:has(#cinemaHero) .cinema-card:hover{border-color:#cbb28d94!important}
+body:has(#cinemaHero) .cinema-card:focus-visible{outline:2px solid #ebdbb7;outline-offset:3px}
+body:has(#cinemaHero) .cinema-card-name{line-height:1.3;letter-spacing:-.025em}
+body:has(#cinemaHero) .cinema-card-progress{border-radius:20px;overflow:hidden}
+body:has(#cinemaHero) .cinema-card-progress i{background:#e6ca96}
+body:has(#cinemaHero) #cinemaSearch{background:transparent!important;color:#f8f5f3!important;min-width:0}
+body:has(#cinemaHero) #cinemaSearch:focus-visible{outline:0}
+body:has(#cinemaHero) .cinema-player-shell{border-radius:16px;overflow:hidden}
+body:has(#cinemaHero) .cinema-video-wrap{background:#050607}
+body:has(#cinemaHero) #cinemaPlayerMessage{line-height:1.5}
+body:has(#playerBar) .track-row{background:#16151a!important;border:1px solid #ffffff16!important;border-radius:13px!important;margin-bottom:6px!important;box-shadow:none!important}
+body:has(#playerBar) .track-row.active{border-color:#c4b2de99!important;background:#221e2b!important}
+body:has(#playerBar) .track-row:focus-within{border-color:#d7c0ed}
+body:has(#playerBar) .track-row .track-cover{border-radius:10px;overflow:hidden;flex-shrink:0}
+body:has(#playerBar) .track-row .track-cover img{width:100%;height:100%;object-fit:cover}
+body:has(#playerBar) .track-row .track-info{min-width:0}
+body:has(#playerBar) .track-row .track-info b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body:has(#playerBar) .track-row .track-btn:focus-visible{outline:2px solid #e6d5f3;outline-offset:2px}
+body:has(#playerBar) .player-bar{border-top:1px solid #ffffff2a!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+body:has(#reader) .book-card{border-radius:15px!important;border:1px solid #ffffff17!important;box-shadow:none!important}
+body:has(#reader) .book-card:hover{border-color:#bacfb7a3!important}
+body:has(#reader) .book-card:focus-within{outline:2px solid #bed5b6;outline-offset:2px}
+body:has(#reader) .book-extent-badge{border-radius:8px}
+body:has(#reader) #readerCopy{overflow-wrap:break-word;hyphens:auto}
+body:has(#reader) #readerPageLabel{font-variant-numeric:tabular-nums;min-width:48px;text-align:center}
+body:has(#reader) .reader-bottom button{min-width:39px;min-height:39px;touch-action:manipulation}
+body:has(#reader) .reader-bottom button:focus-visible{outline:2px solid #bdd7bd;outline-offset:2px}
+@media(max-width:520px){
+ body:has(#cinemaHero) .cinema-section-nav{max-width:100%;overflow:hidden}
+ body:has(#cinemaHero) #cinemaTabs .cinema-tab{font-size:11px;padding-inline:12px}
+ body:has(#playerBar) .track-row{padding:8px!important;gap:7px!important}
+ body:has(#playerBar) .track-row .source-tag{font-size:8px}
+ body:has(#reader) .reader-bottom{gap:4px!important}
+ body:has(#reader) .reader-bottom button{min-width:36px}
+}
+
+/* V7.9 — switching between real module frames without a full page reload.
+ * Host owns the switch and checks iframe identity before acting. */
+.v78-portal .v79-media-switcher{
+ display:flex;flex-wrap:nowrap;gap:7px;overflow-x:auto;scrollbar-width:thin;
+ margin:0 0 21px;padding:0 0 10px;border-bottom:1px solid rgba(255,255,255,.11);
+ overscroll-behavior-inline:contain;
+}
+.v78-portal .v79-switch{
+ flex:1 0 auto;min-width:max-content;min-height:39px;
+ display:inline-flex;align-items:center;justify-content:center;padding:10px 15px;
+ color:#b8bdc6;background:#ffffff08;border:1px solid #ffffff15;
+ border-radius:10px;font:690 11px/1.2 system-ui;cursor:pointer;text-decoration:none;
+ transition:background .16s,border-color .16s;
+}
+.v78-portal .v79-switch:hover{background:#ffffff18;border-color:#ffffff44;color:#fff}
+.v78-portal .v79-switch.is-current{background:#f2f3f1;border-color:#f2f3f1;color:#121416;cursor:default}
+.v78-portal .v79-switch:focus-visible{outline:2px solid #e1e6e5;outline-offset:2px}
+@media(max-width:620px){
+ .v78-portal .v79-media-switcher{margin-bottom:14px;gap:5px}
+ .v78-portal .v79-switch{padding:9px 12px;font-size:10px}
+}
+
+/* VETOGRAM 7.10: real native-media continuity, no fabricated thumbnails. */
+.v710-resume{margin-top:22px;padding:19px;border:1px solid #ffffff19;border-radius:15px;background:#080b0b60}
+.v710-resume[hidden]{display:none!important}
+.v710-resume-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.v710-resume-heading span{font:800 10px/1.4 system-ui;letter-spacing:.17em;color:#ead8b9}
+.v710-resume-heading small{font:480 10px/1.4 system-ui;color:#9faba9}
+.v710-resume-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.v710-resume-card{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0;padding:16px 15px;border:1px solid #ffffff21;border-radius:12px;text-align:left;background:#ffffff0c;color:#fff;cursor:pointer;transition:background .18s,border-color .18s}
+.v710-resume-card:hover{background:#ffffff18;border-color:#ead1a17d}
+.v710-resume-card:focus-visible{outline:2px solid #f6ddb2;outline-offset:2px}
+.v710-resume-card strong{font:730 14px/1.3 system-ui;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v710-resume-card small{font:510 10px/1.4 system-ui;color:#cabfae}
+.v710-resume-track{display:block;width:100%;height:4px;border-radius:99px;overflow:hidden;background:#ffffff20;margin-top:auto}
+.v710-resume-track i{display:block;height:100%;background:#ddc497;border-radius:99px}
+.v710-audio-progress{display:flex;align-items:center;gap:11px;margin:11px 2px 0;color:#b9b0be;font:650 10px/1.2 system-ui;font-variant-numeric:tabular-nums}
+.v710-audio-progress span{flex:0 0 33px}
+.v710-audio-progress progress{flex:1 1 auto;min-width:0;height:5px;border:0;border-radius:99px;overflow:hidden;appearance:none;-webkit-appearance:none;background:#ffffff28}
+.v710-audio-progress progress::-webkit-progress-bar{background:#ffffff28;border-radius:99px}
+.v710-audio-progress progress::-webkit-progress-value{background:#d9c1ed;border-radius:99px}
+.v710-audio-progress progress::-moz-progress-bar{background:#d9c1ed;border-radius:99px}
+@media(max-width:760px){.v710-resume-items{grid-template-columns:1fr}.v710-resume-card{padding:13px 14px}.v710-resume-card strong{font-size:12px}.v710-resume{padding:13px}}
+@media(prefers-reduced-motion:reduce){.v710-resume-card{transition:none!important}}
+
+/* Reader continuity comes from the real Books progress shelf, not metadata. */
+.v710-reading-summary[hidden]{display:none!important}
+.v710-reading-summary{margin-top:16px;padding:14px 17px;border-radius:14px;border:1px solid rgba(211,239,207,.24);background:rgba(20,38,29,.45);display:flex;align-items:center;gap:14px;min-width:0}
+.v710-reading-bookmark{width:43px;height:49px;display:grid;place-items:center;flex-shrink:0;border:1px solid #d6f1d133;background:#c7e0c81a;color:#bde0ba;border-radius:9px;font-size:24px}
+.v710-reading-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.v710-reading-copy small{font:750 9px/1.2 system-ui;letter-spacing:.17em;color:#a4c5a2}
+.v710-reading-copy strong{font:730 14px/1.4 system-ui;color:#f5faf3;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.v710-reading-copy span{font:520 11px/1.4 system-ui;color:#a8baaa}
+.v710-reading-return{flex-shrink:0;padding:12px 15px;min-height:43px;color:#193021;background:#d7ebd0;border:1px solid #e6f5df;border-radius:10px;font:750 11px/1.3 system-ui;cursor:pointer}
+.v710-reading-return:focus-visible{outline:2px solid #eaf8e6;outline-offset:3px}
+@media(max-width:550px){.v710-reading-summary{padding:12px;gap:9px}.v710-reading-bookmark{width:34px;height:39px;font-size:19px}.v710-reading-copy strong{font-size:12px}.v710-reading-return{padding:10px;font-size:10px}}

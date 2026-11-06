@@ -1,0 +1,428 @@
+/*
+ * VETOGRAM 7.2 / SHOWCASE
+ * Media + Arcade editorial overhaul. Scoped to existing Vetogram screens.
+ * Zero changes to Telegram login, session handlers, media bridge or game logic.
+ */
+#vetogram .screen[data-screen="media"] .v61-home,
+#vetogram .screen[data-screen="play"] .vp-shell{
+  --v72-white:#f6f5f3;--v72-muted:#9d9ba4;--v72-line:rgba(255,255,255,.12);
+  --v72-panel:#101014;--v72-faint:rgba(255,255,255,.055);--v72-lime:#dbf385;
+  color:var(--v72-white);max-width:1120px;margin-inline:auto;
+}
+#vetogram .screen[data-screen="media"] .v61-home{padding:8px 12px 80px}
+#vetogram .screen[data-screen="media"] .v72-media-hero{
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(265px,43%)!important;
+  align-items:stretch;gap:0!important;min-height:440px;
+  padding:clamp(26px,5vw,58px)!important;position:relative;isolation:isolate;overflow:hidden;
+  border-radius:26px!important;border:1px solid rgba(255,255,255,.12)!important;
+  background:linear-gradient(118deg,#111118 0%,#12131a 51%,#070809 100%)!important;
+  box-shadow:none!important;
+}
+#vetogram .v72-media-hero::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 55% 75% at 82% 49%,rgba(168,174,210,.14),transparent 71%);
+}
+#vetogram .v72-hero-copy{position:relative;z-index:2;align-self:center;max-width:640px}
+#vetogram .v72-kicker,#vetogram .v72-media-eyebrow,#vetogram .v72-caption{
+  font-size:10px;line-height:1.4;font-weight:750;letter-spacing:.21em;
+}
+#vetogram .v72-kicker{display:flex;align-items:center;gap:10px;color:#e9e8f0}
+#vetogram .v72-kicker-dot,.v72-live-dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:#e1efad;box-shadow:0 0 14px #e1efad57;flex-shrink:0}
+#vetogram .v72-kicker-sep{opacity:.4}
+#vetogram .v72-media-eyebrow{margin:45px 0 11px;color:#a9a7b1;letter-spacing:.15em}
+#vetogram .v72-media-hero h1{
+  font-size:clamp(54px,6.7vw,100px)!important;font-weight:780!important;
+  line-height:.93!important;letter-spacing:-.085em!important;
+  text-transform:none!important;color:#f6f5f3!important;
+  margin:0 0 22px!important;max-width:none!important;
+}
+#vetogram .v72-media-hero h1 em{font-style:normal!important;color:#c7c4db!important;font-weight:500!important}
+#vetogram .v72-h1-dot{color:#dff0aa}
+#vetogram .v72-media-hero p{
+  max-width:420px;font-size:14px;line-height:1.65;color:#a6a5ae!important;
+  margin:0!important;letter-spacing:0;
+}
+#vetogram .v72-hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:30px}
+#vetogram .v72-hero-primary,#vetogram .v72-hero-link{
+  min-height:46px;border:1px solid transparent;border-radius:12px;padding:12px 19px;
+  font-size:12px;font-weight:750;letter-spacing:.015em;cursor:pointer;transition:transform .18s,background .18s;
+}
+#vetogram .v72-hero-primary{background:#f4f3f2;color:#111015}
+#vetogram .v72-hero-primary span{font-size:10px;margin-right:7px}
+#vetogram .v72-hero-link{background:#ffffff0d;color:#fff;border-color:#ffffff21}
+#vetogram .v72-hero-link span{margin-left:13px}
+#vetogram .v72-hero-primary:active,#vetogram .v72-hero-link:active{transform:scale(.97)}
+#vetogram .v72-hero-visual{position:relative;min-height:320px;display:grid;place-items:center;isolation:isolate}
+#vetogram .v72-orbit{position:absolute;left:50%;top:49%;transform:translate(-50%,-50%);border:1px solid rgba(226,233,244,.13);border-radius:50%}
+#vetogram .v72-orbit-a{width:118%;aspect-ratio:1}
+#vetogram .v72-orbit-b{width:147%;aspect-ratio:1;border-color:rgba(226,233,244,.075)}
+#vetogram .v72-vinyl{
+  position:relative;z-index:2;width:min(95%,308px);aspect-ratio:1;border-radius:50%;
+  display:grid;place-items:center;border:1px solid #71717b70;
+  background:repeating-radial-gradient(circle at center,#101219 0px,#101219 2px,#262831 3px,#101219 5px,#101219 8px);
+  box-shadow:0 23px 50px rgba(0,0,0,.65),0 0 0 12px rgba(255,255,255,.016);
+  transform:rotate(-21deg);
+}
+#vetogram .v72-vinyl::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 30deg,transparent 0deg,#ffffff22 23deg,transparent 43deg,transparent 170deg,#ffffff19 198deg,transparent 222deg)}
+#vetogram .v72-vinyl-center{width:36%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:#e9e6e1;color:#15151b;box-shadow:0 0 0 1px #5f6064}
+#vetogram .v72-vinyl-center span{font:850 clamp(38px,5vw,76px)/1 system-ui;letter-spacing:-.14em;padding-right:7px}
+#vetogram .v72-visual-caption{position:absolute;z-index:3;bottom:10px;right:0;display:flex;align-items:center;gap:15px;font:650 9px/1.5 system-ui;letter-spacing:.17em;color:#a7a6b3}
+#vetogram .v72-equalizer{height:22px;display:flex;gap:3px;align-items:center}
+#vetogram .v72-equalizer i{display:block;width:2px;height:6px;border-radius:3px;background:#d8efad}
+#vetogram .v72-equalizer i:nth-child(2),#vetogram .v72-equalizer i:nth-child(4){height:17px}
+#vetogram .v72-equalizer i:nth-child(3){height:11px}
+#vetogram .v72-hero-index{position:absolute;right:26px;top:24px;color:#b8b6c1;font-size:10px;letter-spacing:.17em}
+#vetogram .screen[data-screen="media"] .v61-search{margin-top:22px!important;margin-bottom:10px!important;max-width:none;min-height:53px;border:1px solid var(--v72-line)!important;border-radius:14px;background:#121216!important}
+#vetogram .screen[data-screen="media"] .v61-search input{font-size:13px}
+#vetogram .screen[data-screen="media"] .v61-filters{margin:0 0 26px!important;gap:7px;display:flex;flex-wrap:wrap}
+#vetogram .screen[data-screen="media"] .v61-filters button{background:#ffffff08!important;border:1px solid #ffffff12!important;color:#aaa9b3!important;border-radius:10px!important;padding:9px 14px!important;font-size:11px!important}
+#vetogram .screen[data-screen="media"] .v61-filters button[aria-pressed="true"]{color:#fff!important;background:#ffffff23!important;border-color:#ffffff37!important}
+#vetogram .v72-section-title{display:flex;justify-content:space-between;align-items:end;margin:16px 0 19px!important}
+#vetogram .v72-section-title h2{font-size:clamp(25px,3vw,36px)!important;font-weight:730;letter-spacing:-.055em!important;line-height:1.1;margin:8px 0 0}
+#vetogram .v72-section-title .v72-caption{color:#a9a9b3}
+#vetogram .v72-section-title small{font-size:11px!important;color:#92919b!important}
+#vetogram .screen[data-screen="media"] .v72-media-grid{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:14px!important;max-width:none!important;margin:0!important;
+}
+#vetogram .screen[data-screen="media"] .v72-media-card{
+  position:relative;display:flex!important;flex-direction:column!important;
+  justify-content:space-between!important;align-items:stretch!important;
+  width:100%!important;min-height:340px!important;
+  padding:18px!important;border-radius:20px!important;overflow:hidden!important;
+  border:1px solid rgba(255,255,255,.11)!important;
+  background:#141318!important;box-shadow:none!important;
+  color:#fff!important;text-align:left!important;transform:none;
+}
+#vetogram .screen[data-screen="media"] .v72-media-card:hover{border-color:#ffffff42!important;transform:translateY(-2px)}
+#vetogram .v72-media-card::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:1;z-index:0}
+#vetogram .v72-media-card.v6-world-music::before{background:radial-gradient(ellipse 66% 60% at 48% 36%,#51436b76,transparent 80%),linear-gradient(135deg,#201b29,#111016)}
+#vetogram .v72-media-card.v6-world-cinema::before{background:radial-gradient(ellipse 65% 60% at 60% 35%,#5f554c6b,transparent 78%),linear-gradient(135deg,#29241f,#111114)}
+#vetogram .v72-media-card.v6-world-books::before{background:radial-gradient(ellipse 65% 50% at 50% 36%,#60776b5e,transparent 80%),linear-gradient(120deg,#1a2621,#111517)}
+#vetogram .v72-media-card.v6-world-play::before{background:radial-gradient(ellipse 65% 50% at 55% 36%,#395c8361,transparent 80%),linear-gradient(120deg,#162532,#0f1319)}
+#vetogram .v72-card-top,#vetogram .v72-card-footer{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;gap:10px}
+#vetogram .v72-card-top .v72-card-number{font:750 10px/1.4 system-ui;letter-spacing:.16em;color:#d5d1db}
+#vetogram .v72-card-arrow{height:30px;width:30px;display:grid;place-items:center;border-radius:100%;border:1px solid #ffffff50;font-size:15px;color:#fff}
+#vetogram .v72-card-footer strong{display:block;font-size:clamp(26px,3vw,35px);line-height:1.08;letter-spacing:-.056em;font-weight:760;color:#fff}
+#vetogram .v72-card-footer small{display:block;margin-top:7px;font-size:11px;color:#c5c0c9;line-height:1.45}
+#vetogram .v72-card-cta{font:750 9px/1.2 system-ui;letter-spacing:.1em;color:#c6c3cd;padding:9px 12px;border:1px solid #ffffff35;border-radius:100px}
+#vetogram .v72-card-art{position:absolute;inset:42px 10px 60px;z-index:1;display:grid;place-items:center;pointer-events:none;overflow:hidden}
+#vetogram .v72-record-art{position:relative;width:210px;aspect-ratio:1;border-radius:50%;background:repeating-radial-gradient(circle,#11101d 0px,#11101d 2px,#60506c 3px,#1b1a28 5px,#171522 9px);border:1px solid #a8a1b1b0;box-shadow:16px 26px 35px #08080ba8;transform:rotate(-19deg)}
+#vetogram .v72-record-art::after{content:"";position:absolute;inset:1px;border-radius:50%;background:conic-gradient(transparent 0deg,#ffffff20 40deg,transparent 80deg)}
+#vetogram .v72-record-label{position:absolute;inset:34%;border-radius:50%;background:#d6cad5;color:#24202a;display:grid;place-items:center;font-size:37px;font-weight:900;z-index:1}
+#vetogram .v72-music-note{position:absolute;font-size:36px;color:#c5b6d6;top:7%;right:17%;opacity:.6}
+#vetogram .v72-film-frame{position:relative;width:225px;height:169px;border:9px solid #131213;border-radius:5px;overflow:hidden;background:linear-gradient(145deg,#aa9c7d 0%,#595d5d 47%,#192734 100%);box-shadow:0 14px 30px #080b0eaa;transform:rotate(-7deg)}
+#vetogram .v72-film-sun{position:absolute;width:72px;height:72px;border-radius:50%;background:#f4dec1;top:12px;right:27px;box-shadow:0 0 35px #f7e4bc60}
+#vetogram .v72-film-ridge{position:absolute;bottom:-16px;left:-20px;width:130%;height:100px;clip-path:polygon(0 90%,22% 35%,44% 78%,70% 12%,100% 72%,100% 100%,0 100%);background:#243c40}
+#vetogram .v72-film-ridge.two{bottom:-20px;background:#15252f;clip-path:polygon(0 90%,32% 42%,47% 79%,78% 38%,100% 77%,100% 100%,0 100%)}
+#vetogram .v72-film-play{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:24px;text-shadow:0 2px 9px #000}
+#vetogram .v72-frame-mark{position:absolute;top:2%;left:10%;font:650 9px system-ui;letter-spacing:.2em;color:#ccc1b6}
+#vetogram .v72-book-cover{position:relative;width:146px;height:191px;background:linear-gradient(154deg,#e4e7dd,#859990);border-radius:2px 7px 7px 2px;box-shadow:10px 14px 28px #070d0ab0;transform:rotate(-10deg);padding:19px;color:#17231e;z-index:2;display:flex;flex-direction:column;justify-content:space-between;border-left:9px solid #647b70}
+#vetogram .v72-book-cover small{font:800 7px system-ui;letter-spacing:.11em}
+#vetogram .v72-book-cover span{font:850 28px/1.02 system-ui;letter-spacing:-.07em}
+#vetogram .v72-book-cover i{display:block;height:1px;width:68%;background:#253b2d}
+#vetogram .v72-book-cover-secondary{position:absolute;width:145px;height:193px;background:#32443c;border-radius:3px;transform:rotate(12deg) translate(14px,0);box-shadow:5px 12px 25px #000a}
+#vetogram .v72-art-games{display:flex;gap:7px;align-items:center;justify-content:center;transform:rotate(-12deg)}
+#vetogram .v72-game-tile{display:grid;place-items:center;position:relative;width:64px;height:72px;border:1px solid rgba(255,255,255,.36);background:#c0d6e7;color:#1b2531;border-radius:11px;font:850 27px/1 system-ui;box-shadow:0 12px 18px #03050755}
+#vetogram .v72-game-tile.tile-b{background:#a5d1e8;transform:translateY(-20px)}
+#vetogram .v72-game-tile.tile-c{background:#e8dfc1;transform:translateY(13px)}
+#vetogram .v72-game-tile.tile-d{background:#9eacce;transform:translateY(-15px)}
+#vetogram .v72-discovery-note{display:flex;align-items:center;gap:10px;margin:15px 2px 32px;color:#9999a2;font-size:11px;line-height:1.5}
+#vetogram .v72-discovery-note .v72-live-dot{width:5px;height:5px}
+#vetogram .screen[data-screen="media"] .v61-vault-spotlight{border:1px solid rgba(255,255,255,.13)!important;background:linear-gradient(110deg,#18191c,#101115)!important;border-radius:18px!important;margin-top:8px}
+#vetogram .screen[data-screen="media"] .v61-vault-spotlight h2{letter-spacing:-.04em}
+/* ARCADE — visually distinct from the old mini-game form layout. */
+#vetogram .screen[data-screen="play"] .vp-shell{max-width:1120px;padding:9px 12px 70px}
+#vetogram .screen[data-screen="play"] .vp-top{padding:15px 2px 17px;align-items:center}
+#vetogram .screen[data-screen="play"] .vp-heading strong{font-size:21px;color:#fff;letter-spacing:-.045em}
+#vetogram .screen[data-screen="play"] .vp-count{font-size:10px;color:#d2d5d5;background:#ffffff08;border-color:#ffffff24}
+#vetogram .screen[data-screen="play"] .v72-play-hero{position:relative;min-height:345px;padding:35px 41px!important;display:grid!important;grid-template-columns:57% 43%!important;align-items:center!important;gap:0!important;border-radius:24px!important;background:linear-gradient(122deg,#122129 0%,#142330 56%,#19252b 100%)!important;border:1px solid #ffffff21!important;box-shadow:none!important;overflow:hidden}
+#vetogram .v72-play-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 40% 75% at 74% 55%,#5688a151,transparent 75%);pointer-events:none}
+#vetogram .v72-play-hero .vp-hero-copy{max-width:540px;z-index:2}
+#vetogram .v72-play-hero .vp-overline{color:#b4dfdb!important;font-size:10px!important;letter-spacing:.18em!important;font-weight:700!important}
+#vetogram .v72-play-hero h1{font-size:clamp(38px,5.4vw,68px)!important;line-height:.98!important;letter-spacing:-.07em!important;color:#f4f9f8!important;margin:17px 0 14px!important}
+#vetogram .v72-play-hero h1 em{font-style:normal;color:#b9e0dc!important}
+#vetogram .v72-play-hero p{max-width:410px;font-size:13px;color:#a6bec3;line-height:1.65}
+#vetogram .v72-play-hero-stats{display:flex;flex-wrap:wrap;gap:9px;margin-top:17px}
+#vetogram .v72-play-hero-stats span{font-size:9px;letter-spacing:.11em;color:#bdcbd0;border:1px solid #ffffff23;padding:8px 10px;border-radius:8px;background:#ffffff0a}
+#vetogram .v72-play-hero-stats b{font-size:15px;color:#e2f1ec;margin-right:4px;letter-spacing:-.04em}
+#vetogram .v72-play-jump{display:inline-flex;align-items:center;gap:18px;color:#071a1c!important;text-decoration:none;background:#d3ece6;border-radius:11px;margin-top:18px;padding:12px 16px;font-size:12px;font-weight:760}
+#vetogram .v72-play-jump span{font-size:17px}
+#vetogram .v72-play-hero-art{position:relative;display:grid;place-items:center;min-height:270px}
+#vetogram .v72-play-figure{width:230px;aspect-ratio:1;display:grid;place-items:center;position:relative;transform:rotate(-13deg)}
+#vetogram .v72-play-figure::before{content:"";position:absolute;inset:8px;border-radius:38px;background:linear-gradient(145deg,#a9d6dc,#548ca4);box-shadow:15px 25px 55px #07181db3}
+#vetogram .v72-play-screen{position:relative;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px;background:#193746;border:9px solid #d4e7e7;border-radius:25px;z-index:2;width:172px;height:173px;box-shadow:inset 0 0 16px #001b2baa}
+#vetogram .v72-play-screen i{display:grid;place-items:center;border-radius:8px;background:#b3d3d5;color:#19343f;font:850 26px/1 system-ui;font-style:normal}
+#vetogram .v72-play-screen i:last-child{background:#f1d8af}
+#vetogram .v72-play-rim{position:absolute;right:2px;bottom:5px;font:650 9px/1 system-ui;letter-spacing:.18em;color:#b8ced1}
+#vetogram .screen[data-screen="play"] .vp-catalog-tools{margin:24px 0 23px;padding:16px 18px!important;border-radius:16px;background:#111318!important;border:1px solid #ffffff1e}
+#vetogram .screen[data-screen="play"] .vp-search input{background:#1a1b20;color:#fff;border-color:#ffffff26}
+#vetogram .screen[data-screen="play"] .vp-filters{gap:7px}
+#vetogram .screen[data-screen="play"] .vp-filter{border-color:#ffffff1a;color:#c4c3c9}
+#vetogram .screen[data-screen="play"] .vp-filter.is-selected{background:#e6efeb!important;color:#152124!important;border-color:transparent}
+#vetogram .screen[data-screen="play"] .vp-section-head{margin:31px 0 14px}
+#vetogram .screen[data-screen="play"] .vp-section-head h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.055em}
+#vetogram .screen[data-screen="play"] .vp-section-head p{color:#aaaab1}
+#vetogram .screen[data-screen="play"] .vp-featured,#vetogram .screen[data-screen="play"] .vp-who{border:1px solid #ffffff1b;background:#111217;border-radius:18px;box-shadow:none}
+#vetogram .screen[data-screen="play"] .vp-featured{min-height:210px}
+#vetogram .screen[data-screen="play"] .vp-blot-art{background:radial-gradient(ellipse at center,#4d3d46,#18171b 70%)}
+#vetogram .screen[data-screen="play"] .vp-who{margin-top:12px}
+#vetogram .screen[data-screen="play"] .vp-feature-copy p,#vetogram .screen[data-screen="play"] .vp-who-copy p{font-size:12px;color:#a5a4ae}
+#vetogram .screen[data-screen="play"] .vp-mini-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important}
+#vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog){
+  position:relative;min-height:300px!important;display:flex!important;flex-direction:column!important;
+  align-items:flex-start!important;justify-content:flex-end!important;
+  padding:21px!important;border-radius:19px!important;
+  background:#14141a!important;border:1px solid #ffffff20!important;
+  box-shadow:none!important;overflow:hidden!important;
+}
+#vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog)::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0}
+#vetogram .vp-mini[data-vp-game="reaction"]::before{background:radial-gradient(ellipse 72% 65% at 53% 28%,#6947647d,transparent 82%)}
+#vetogram .vp-mini[data-vp-game="pairs"]::before{background:radial-gradient(ellipse 72% 65% at 53% 28%,#52528478,transparent 82%)}
+#vetogram .vp-mini[data-vp-game="tic"]::before{background:radial-gradient(ellipse 72% 65% at 53% 28%,#446a7978,transparent 82%)}
+#vetogram .vp-mini[data-vp-game="2048"]::before{background:radial-gradient(ellipse 72% 65% at 53% 28%,#87634272,transparent 82%)}
+#vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) .vp-game-art{
+  position:absolute!important;z-index:1;inset:15px 15px auto!important;
+  margin:0!important;width:calc(100% - 30px)!important;height:143px!important;
+  display:grid!important;place-items:center!important;
+  background:transparent!important;border:0!important;
+}
+#vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) .vp-game-art svg{width:190px;height:115px;max-width:100%;filter:drop-shadow(0 12px 17px #0006)}
+#vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) .vp-mini-icon{display:none!important}
+#vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) h3{position:relative;z-index:2;font-size:clamp(23px,2.7vw,29px)!important;margin:0 0 6px!important;line-height:1.1;letter-spacing:-.04em;color:#fff}
+#vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) p{position:relative;z-index:2;color:#c0bec8!important;font-size:11px!important;line-height:1.48!important;margin:0 0 14px!important;max-width:340px}
+#vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) > :is(.vp-mini-stat,.vp-memory-actions,.vp-memory-grid,.vp-ttt-grid,.vp-2048-grid,.vp-2048-controls,.vp-reaction-button){display:none!important}
+#vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) .vp-open-game{position:relative;z-index:3;display:flex!important;justify-content:center!important;align-items:center!important;gap:8px;width:100%;border:1px solid #ffffff30!important;border-radius:10px!important;min-height:42px!important;background:#f5f4f3!important;color:#111318!important;font-weight:760;font-size:12px;cursor:pointer;margin-top:auto}
+#vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog):hover{border-color:#ffffff52!important}
+#vetogram .screen[data-screen="play"] .vp-game-dialog{background:#101117;color:#fff;border:1px solid #ffffff2a;max-height:94dvh}
+#vetogram .screen[data-screen="play"] .vp-game-dialog .vp-mini.vp-game-in-dialog{max-height:none!important;overflow:visible!important;min-height:0!important;background:#14141a!important;border-radius:14px}
+#vetogram .screen[data-screen="play"] .vp-game-dialog .vp-game-art{display:none!important}
+#vetogram .screen[data-screen="play"] .vp-room-zone,#vetogram .screen[data-screen="play"] .vp-stats-zone{border-color:#ffffff1e!important;background:#121318!important;border-radius:18px!important}
+@media (max-width:720px){
+ #vetogram .screen[data-screen="media"] .v61-home,#vetogram .screen[data-screen="play"] .vp-shell{padding-left:7px!important;padding-right:7px!important}
+ #vetogram .screen[data-screen="media"] .v72-media-hero{grid-template-columns:1fr!important;min-height:335px!important;padding:26px 23px!important}
+ #vetogram .v72-media-hero h1{font-size:clamp(49px,10.6vw,70px)!important}
+ #vetogram .v72-media-hero .v72-media-eyebrow{margin-top:24px}
+ #vetogram .v72-media-hero p{max-width:67%}
+ #vetogram .v72-media-hero .v72-hero-actions{margin-top:22px}
+ #vetogram .v72-hero-visual{position:absolute;right:-38px;top:42px;width:210px;min-height:215px;opacity:.38;z-index:0}
+ #vetogram .v72-vinyl{width:170px}
+ #vetogram .v72-visual-caption,#vetogram .v72-hero-index{display:none}
+ #vetogram .v72-media-hero .v72-hero-copy{z-index:2}
+ #vetogram .screen[data-screen="media"] .v72-media-grid{gap:9px!important}
+ #vetogram .screen[data-screen="media"] .v72-media-card{min-height:258px!important;padding:13px!important;border-radius:15px!important}
+ #vetogram .v72-card-top .v72-card-number{font-size:8px}
+ #vetogram .v72-card-arrow{width:24px;height:24px;font-size:13px}
+ #vetogram .v72-card-footer{align-items:end}
+ #vetogram .v72-card-footer strong{font-size:22px}
+ #vetogram .v72-card-footer small{font-size:10px}
+ #vetogram .v72-card-cta{display:none}
+ #vetogram .v72-card-art{inset:38px 2px 55px}
+ #vetogram .v72-record-art{width:139px}
+ #vetogram .v72-film-frame{width:152px;height:117px;border-width:6px}
+ #vetogram .v72-book-cover{width:102px;height:142px;padding:12px;border-left-width:6px}
+ #vetogram .v72-book-cover span{font-size:21px}
+ #vetogram .v72-book-cover-secondary{width:99px;height:145px}
+ #vetogram .v72-game-tile{width:33px;height:43px;font-size:17px;border-radius:7px}
+ #vetogram .v72-art-games{gap:4px}
+ #vetogram .v72-section-title small{font-size:9px!important;text-align:right}
+ #vetogram .screen[data-screen="play"] .v72-play-hero{grid-template-columns:1fr!important;min-height:308px!important;padding:24px!important}
+ #vetogram .v72-play-hero h1{font-size:clamp(37px,8vw,58px)!important;max-width:78%}
+ #vetogram .v72-play-hero .vp-hero-copy{z-index:2}
+ #vetogram .v72-play-hero p{max-width:68%}
+ #vetogram .v72-play-hero-art{position:absolute;right:-54px;top:0;width:220px;height:270px;min-height:0;opacity:.32;z-index:0}
+ #vetogram .v72-play-figure{width:195px}
+ #vetogram .v72-play-screen{width:150px;height:150px;padding:10px}
+ #vetogram .v72-play-rim{display:none}
+ #vetogram .screen[data-screen="play"] .vp-mini-grid{gap:10px!important}
+ #vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog){min-height:265px!important;padding:13px!important}
+ #vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) .vp-game-art{height:125px!important}
+ #vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) .vp-game-art svg{width:140px;height:93px}
+ #vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) h3{font-size:20px!important}
+ #vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) p{font-size:10px!important}
+}
+@media (max-width:410px){
+ #vetogram .screen[data-screen="media"] .v72-media-hero{padding:22px 18px!important}
+ #vetogram .v72-media-hero h1{font-size:clamp(46px,11vw,56px)!important}
+ #vetogram .v72-media-hero p{max-width:75%}
+ #vetogram .v72-hero-primary,#vetogram .v72-hero-link{padding:10px 12px;font-size:10px}
+ #vetogram .screen[data-screen="play"] .v72-play-hero{padding:22px 17px!important}
+ #vetogram .v72-play-hero h1{font-size:37px!important}
+ #vetogram .v72-play-hero-stats{gap:5px}
+ #vetogram .v72-play-hero-stats span{font-size:8px;padding:7px}
+ #vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog){min-height:265px!important;padding:11px!important}
+ #vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) h3{font-size:17px!important}
+ #vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) p{font-size:9px!important}
+ #vetogram .screen[data-screen="play"] .vp-mini:not(.vp-game-in-dialog) .vp-open-game{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){#vetogram .v72-media-card,#vetogram .v72-hero-primary,#vetogram .v72-hero-link{transition:none!important}}
+
+/* The three real media modules use this same visual language. Preserve native controls and source disclosures. */
+body:has(#cinemaPlayer) .cinema-shell{max-width:1370px;margin-inline:auto}
+body:has(#cinemaPlayer) .cinema-header{background:#090a0d!important;border-bottom:1px solid #ffffff1c!important;min-height:64px!important}
+body:has(#cinemaPlayer) .cinema-brand-words strong{font-weight:800;letter-spacing:-.04em}
+body:has(#cinemaPlayer) .cinema-hero{
+ min-height:clamp(360px,46vw,520px)!important;border-radius:22px!important;
+ position:relative;overflow:hidden;border:1px solid #ffffff26!important;
+ background:#14171a!important;margin-top:14px!important;
+}
+body:has(#cinemaPlayer) .cinema-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0a0b0efa 0%,#0a0b0ecc 36%,transparent 87%);pointer-events:none}
+body:has(#cinemaPlayer) .cinema-hero-copy{position:relative;z-index:2;max-width:660px!important}
+body:has(#cinemaPlayer) .cinema-hero h1{font-size:clamp(35px,5vw,65px)!important;letter-spacing:-.065em!important;font-weight:780!important;line-height:1.03!important}
+body:has(#cinemaPlayer) .cinema-hero h1 i{font-style:normal!important;color:#d1c6ae!important}
+body:has(#cinemaPlayer) .cinema-hero-copy p{color:#c6c4c5!important;line-height:1.6}
+body:has(#cinemaPlayer) .cinema-primary{background:#f6f4f1!important;color:#121214!important;border-radius:10px!important;font-weight:800!important}
+body:has(#cinemaPlayer) .cinema-secondary{background:#ffffff15!important;color:#fff!important;border:1px solid #ffffff31!important;border-radius:10px!important}
+body:has(#cinemaPlayer) .cinema-hero-footer{z-index:3!important}
+body:has(#cinemaPlayer) .cinema-section-nav{background:#090a0d!important;border-bottom:1px solid #ffffff16!important}
+body:has(#cinemaPlayer) .cinema-section-head h2{font-size:clamp(24px,3vw,36px)!important;letter-spacing:-.06em!important}
+body:has(#cinemaPlayer) :is(.cinema-card,.cinema-studio-card,.cinema-watch-card){background:#141419!important;border-radius:15px!important;border:1px solid #ffffff1d!important;box-shadow:none!important}
+body:has(#cinemaPlayer) :is(.cinema-card-art,.cinema-watch-art){border-radius:11px!important;overflow:hidden!important}
+body:has(#cinemaPlayer) .cinema-card-art img{width:100%!important;height:100%!important;object-fit:cover!important}
+body:has(#cinemaPlayer) .cinema-card-art:has(img) .cinema-card-art-title{display:none!important}
+body:has(#cinemaPlayer) .cinema-search input{background:#14151a!important;border-color:#ffffff25!important;color:#fff!important}
+body:has(#playerBar) .app{background:#000!important}
+body:has(#playerBar) .sidebar{border-right:1px solid #ffffff16!important;background:#0b0b0e!important}
+body:has(#playerBar) .topbar{border-bottom:1px solid #ffffff17!important;background:#0a0a0c!important}
+body:has(#playerBar) .hero#hero{
+ min-height:355px!important;position:relative!important;overflow:hidden!important;
+ background:linear-gradient(110deg,#1b1827,#12121b 61%,#0b0b12)!important;
+ border:1px solid #ffffff22!important;border-radius:23px!important;
+ box-shadow:none!important;
+}
+body:has(#playerBar) #hero .hero-inner{position:relative;z-index:2}
+body:has(#playerBar) #hero h1{font-size:clamp(40px,5vw,70px)!important;letter-spacing:-.078em!important;line-height:1.03!important;color:#fff!important}
+body:has(#playerBar) #hero h1 em{font-style:normal!important;color:#d7c5e8!important}
+body:has(#playerBar) #hero p{color:#bfbac6!important}
+body:has(#playerBar) .primary-btn{background:#f5f3f8!important;color:#19131e!important;border:0!important;border-radius:11px!important}
+body:has(#playerBar) .glass-btn{border:1px solid #ffffff2d!important;border-radius:11px!important}
+body:has(#playerBar) .vinyl-large{filter:drop-shadow(0 25px 30px #000a)}
+body:has(#playerBar) .native-home-option{border:1px solid #ffffff18!important;background:#17171c!important;border-radius:16px!important;box-shadow:none!important}
+body:has(#playerBar) .native-home-option:hover{border-color:#ffffff49!important}
+body:has(#playerBar) .player-bar{background:#111116!important;border-top:1px solid #ffffff2b!important}
+body:has(#reader) .books-main{max-width:1320px;margin-inline:auto}
+body:has(#reader) .topbar{background:#090b0b!important;border-bottom:1px solid #ffffff1a!important}
+body:has(#reader) .hero-veto{
+ position:relative;min-height:390px!important;overflow:hidden!important;
+ background:linear-gradient(119deg,#1b2924,#131c19 55%,#0c1112)!important;
+ border:1px solid #ffffff22!important;border-radius:22px!important;
+ box-shadow:none!important;
+}
+body:has(#reader) .hero-veto::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 55% 70% at 83% 49%,#8ca6922b,transparent 78%);pointer-events:none}
+body:has(#reader) .hero-veto h1{font-size:clamp(42px,6vw,77px)!important;line-height:1!important;letter-spacing:-.075em!important;color:#f3f7ef!important}
+body:has(#reader) .hero-veto h1 i{font-style:normal!important;color:#b9cfc0!important}
+body:has(#reader) .hero-veto .hero-lead{line-height:1.65!important;color:#afbcb5!important}
+body:has(#reader) .hero-action-main{background:#e3ebe0!important;color:#17231e!important;border-radius:11px!important}
+body:has(#reader) .hero-action-secondary{border:1px solid #ffffff2c!important;border-radius:11px!important}
+body:has(#reader) .featured-editions-heading h2{font-size:clamp(24px,3vw,35px)!important;letter-spacing:-.055em}
+body:has(#reader) :is(.book-card,.featured-edition,.featured-edition-card){border-radius:14px!important;box-shadow:none!important}
+body:has(#reader) :is(.book-cover,.book-card-cover,.featured-edition-cover) img{width:100%;height:100%;object-fit:cover}
+body:has(#reader) .source-tabs{gap:7px!important}
+body:has(#reader) .source-tabs button{border-radius:9px!important}
+body:has(#reader) .book-mode-explainer{background:#172019!important;border-color:#ffffff1b!important;border-radius:11px!important}
+@media(max-width:600px){
+ body:has(#cinemaPlayer) .cinema-hero{min-height:350px!important;border-radius:15px!important}
+ body:has(#cinemaPlayer) .cinema-hero::after{background:linear-gradient(0deg,#0c0c0ef7,#0c0c0e8c 72%,transparent)}
+ body:has(#cinemaPlayer) .cinema-hero h1{font-size:36px!important}
+ body:has(#playerBar) #hero{min-height:315px!important;border-radius:15px!important}
+ body:has(#playerBar) #hero h1{font-size:42px!important}
+ body:has(#reader) .hero-veto{min-height:360px!important;border-radius:15px!important}
+ body:has(#reader) .hero-veto h1{font-size:44px!important}
+}
+
+/* V7.3 playable arcade: both gallery art and full game use the SAME native DOM nodes. */
+#vetogram .vp-screen .vp-mini[data-vp-game]:not(.vp-game-in-dialog) > .vp-game-art{display:grid!important}
+#vetogram .vp-screen .vp-mini[data-vp-game]:not(.vp-game-in-dialog) > :is(.v73-game-actions,.v73-mines-grid,.v73-snake-grid,.v73-snake-directions){display:none!important}
+#vetogram .vp-screen .vp-mini[data-vp-game="mines"]:not(.vp-game-in-dialog)::before{background:radial-gradient(ellipse 72% 65% at 53% 28%,#857d496a,transparent 80%)}
+#vetogram .vp-screen .vp-mini[data-vp-game="snake"]:not(.vp-game-in-dialog)::before{background:radial-gradient(ellipse 72% 65% at 53% 28%,#377d6575,transparent 80%)}
+#vetogram .vp-screen .v73-art-grid{display:grid;gap:5px;position:relative;z-index:2;filter:drop-shadow(0 13px 22px #0009);transform:rotate(-9deg)}
+#vetogram .vp-screen .v73-mines-art-grid{grid-template-columns:repeat(3,37px)}
+#vetogram .vp-screen .v73-mines-art-grid span{display:grid;place-items:center;width:37px;height:37px;border-radius:7px;background:#7a785e;border:1px solid #ffffff45;color:#f9f4d8;font-size:17px;font-weight:850}
+#vetogram .vp-screen .v73-mines-art-grid span:nth-child(2),#vetogram .vp-screen .v73-mines-art-grid span:nth-child(9){background:#454740;color:#ff9f8e}
+#vetogram .vp-screen .v73-mines-art-grid span:nth-child(5){background:#d8bb73;color:#503e25}
+#vetogram .vp-screen .v73-snake-art-grid{grid-template-columns:repeat(4,33px);gap:4px;transform:rotate(9deg)}
+#vetogram .vp-screen .v73-snake-art-grid span{width:33px;height:33px;border-radius:6px;background:#24372f;border:1px solid #ffffff10}
+#vetogram .vp-screen .v73-snake-art-grid .body{background:#82bba2}
+#vetogram .vp-screen .v73-snake-art-grid .head{background:#d1f3bb}
+#vetogram .vp-screen .v73-snake-art-grid .food{background:#ec8b73;border-radius:50%;transform:scale(.75)}
+#vetogram .vp-screen .v73-new-game .vp-store-actions{position:relative;z-index:3}
+#vetogram .vp-screen .vp-game-dialog .v73-game-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:10px 0}
+#vetogram .vp-screen .vp-game-dialog .v73-game-actions button{min-height:42px;flex:1 1 120px;padding:8px 11px;font-size:11px;border:1px solid #ffffff30;border-radius:10px;background:#29302e;color:#ecf8ee;cursor:pointer}
+#vetogram .vp-screen .vp-game-dialog .v73-game-actions #vpSnakeToggle{background:#d0eddf;color:#10231e;font-weight:800}
+#vetogram .vp-screen .vp-game-dialog .v73-game-metrics{display:flex;justify-content:space-between;padding:8px 0}
+#vetogram .vp-screen .vp-game-dialog .v73-mines-grid{
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;
+ width:min(100%,340px);margin:10px auto 15px;
+}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell{
+ display:grid;place-items:center;aspect-ratio:1;min-width:0;
+ border-radius:7px;border:1px solid #ffffff24;
+ background:#383b40;color:#e8efee;font:bold 17px/1 system-ui;
+ cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;box-shadow:inset 0 -3px #0003;
+}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell.is-open{background:#1e2529;border-color:#ffffff14;box-shadow:none;cursor:default}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell.is-flagged{color:#f3c579;background:#4b4030}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell.is-mine{background:#a54a46;color:#fff}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell[data-count="1"]{color:#9ac4f8}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell[data-count="2"]{color:#a1eab5}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell[data-count="3"]{color:#f4ba9d}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell[data-count="4"]{color:#f4a8dd}
+#vetogram .vp-screen .vp-game-dialog .v73-mine-cell:focus-visible{outline:2px solid #f2e0a1;outline-offset:2px}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-grid{
+ display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;
+ width:min(100%,320px);aspect-ratio:1;padding:8px;margin:12px auto;
+ border:1px solid #ffffff25;border-radius:13px;background:#14221e;
+ touch-action:none;overflow:hidden;
+}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-cell{aspect-ratio:1;min-width:0;border-radius:3px;background:#24372f}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-cell.is-body{background:#79b89b}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-cell.is-head{background:#d2f8c2;border-radius:6px;box-shadow:0 0 7px #d2f8c250}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-cell.is-food{background:#ef8d73;border-radius:50%;transform:scale(.73);box-shadow:0 0 9px #ef8d7370}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-directions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px auto;max-width:320px}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-directions button{height:44px;border-radius:9px;background:#253c34;border:1px solid #ffffff2b;color:#e0f4e4;font-size:19px;font-weight:750;touch-action:manipulation}
+#vetogram .vp-screen .vp-game-dialog .v73-snake-directions button:active{background:#577d67}
+#vetogram .vp-screen .vp-game-dialog .v73-new-game > .vp-mini-stat{display:block;color:#bfc4c6;font-size:11px;line-height:1.5;margin-top:4px}
+#vetogram .vp-screen .vp-game-dialog .v73-new-game .vp-game-art{display:none!important}
+#vetogram .vp-screen .vp-game-dialog .v73-new-game .vp-mini-icon{display:none!important}
+@media(max-width:390px){
+ #vetogram .vp-screen .vp-game-dialog .v73-mines-grid{gap:4px}
+ #vetogram .vp-screen .vp-game-dialog .v73-mine-cell{font-size:14px;border-radius:5px}
+ #vetogram .vp-screen .vp-game-dialog .v73-snake-grid{gap:1.5px;padding:6px}
+}
+
+/* V7.4 / Local profile — facts read from the existing six game keys. */
+#vetogram .vp-screen .v74-local-panel{margin:22px 0 4px;max-width:100%;min-width:0}
+#vetogram .vp-screen .v74-local-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:0 2px 14px}
+#vetogram .vp-screen .v74-overline{display:block;color:#9f9da9;letter-spacing:.2em;font:750 9px/1.6 system-ui}
+#vetogram .vp-screen .v74-local-head h2{color:#f7f5f3;font:760 clamp(24px,2.8vw,33px)/1.1 system-ui;letter-spacing:-.055em;margin:6px 0 0}
+#vetogram .vp-screen .v74-local-head h2 span{color:#b8d7cf}
+#vetogram .vp-screen .v74-local-hint{font-size:10px;line-height:1.5;color:#8c9296;text-align:right;max-width:170px}
+#vetogram .vp-screen .v74-score-rail{
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;
+ padding:0 0 3px;max-width:100%;min-width:0;
+}
+#vetogram .vp-screen .v74-score{
+ display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:4px;
+ padding:15px 13px;min-height:158px;border:1px solid #ffffff1e;border-radius:15px;
+ background:linear-gradient(147deg,#1b1c21,#121316);color:#f4f5f4;cursor:pointer;
+ transition:border-color .15s,transform .15s,background .15s;min-width:0;overflow:hidden;
+}
+#vetogram .vp-screen .v74-score:hover{border-color:#bfd9cf81;background:linear-gradient(147deg,#232830,#141719);transform:translateY(-2px)}
+#vetogram .vp-screen .v74-score:focus-visible{outline:2px solid #d0efe1;outline-offset:3px}
+#vetogram .vp-screen .v74-score-symbol{
+ display:grid;place-items:center;border:1px solid #ffffff1f;background:#ffffff0d;
+ border-radius:9px;color:#b1d3c7;font:750 18px/1 system-ui;width:32px;height:32px;margin-bottom:7px
+}
+#vetogram .vp-screen .v74-score-name{color:#bfc1c4;font-size:11px;line-height:1.2;font-weight:600;white-space:normal}
+#vetogram .vp-screen .v74-score strong{color:#fafbfa;font:810 clamp(21px,2.4vw,29px)/1.1 system-ui;letter-spacing:-.055em;min-height:29px}
+#vetogram .vp-screen .v74-score small{color:#828992;font:700 8px/1.2 system-ui;letter-spacing:.13em}
+@media(max-width:960px){
+ #vetogram .vp-screen .v74-score-rail{display:flex;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;scrollbar-width:thin;padding:1px 2px 10px}
+ #vetogram .vp-screen .v74-score{flex:0 0 156px;scroll-snap-align:start}
+}
+@media(max-width:440px){
+ #vetogram .vp-screen .v74-local-head{align-items:start;flex-direction:column;gap:4px}
+ #vetogram .vp-screen .v74-local-hint{text-align:left;max-width:none}
+ #vetogram .vp-screen .v74-score{flex-basis:142px;min-height:145px;padding:12px}
+}
+@media(prefers-reduced-motion:reduce){#vetogram .vp-screen .v74-score{transition:none!important}}

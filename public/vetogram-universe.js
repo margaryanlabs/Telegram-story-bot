@@ -6,6 +6,30 @@
  root.classList.add('vetogram-universe');
  const definitions=Object.freeze({music:{title:'Музыка',path:'/music-module.html'},cinema:{title:'Кино',path:'/cinema.html'},books:{title:'Книги',path:'/books.html'}});
  const frames=new Map();let activeModule='',screen=document.querySelector('.screen.active')?.dataset.screen||'home';
+ // Reuse cached module frames when navigating back; never serialize visited
+ // titles, Telegram credentials, audio sources or reader text to browser history.
+ const mediaTrail=[];
+ function updateMediaBack(){
+  const button=$('v6MediaBack');
+  const destination=mediaTrail.length>1?definitions[mediaTrail[mediaTrail.length-2]]?.title:'Медиа';
+  const title=destination||'Медиа';
+  const label=button?.querySelector?.('span');
+  if(label)label.textContent=title;
+  button?.setAttribute?.('aria-label','Назад: '+title);
+ }
+ function recordMediaVisit(name){
+  if(mediaTrail[mediaTrail.length-1]!==name)mediaTrail.push(name);
+  if(mediaTrail.length>12)mediaTrail.shift();
+  updateMediaBack();
+ }
+ function backInMedia(){
+  if(mediaTrail.length<=1){showHub();return;}
+  mediaTrail.pop();
+  const previous=mediaTrail[mediaTrail.length-1];
+  if(!previous||!Object.prototype.hasOwnProperty.call(definitions,previous)){showHub();return;}
+  // Do not record a new visit: the next Back action must step backward.
+  openModule(previous,null,null,null,false);
+ }
  const identityKey=()=>[String(window.Telegram?.WebApp?.initData||''),
   String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id||'')].join(':');
  let identity=identityKey(),lastAudio=null,lastTrackId='',openRequestSerial=0;
@@ -20,17 +44,21 @@
  const send=(name,message)=>frames.get(name)?.element.contentWindow?.postMessage({channel:'vetogram-universe',...message},location.origin);
  function visibility(){for(const name of frames.keys())send(name,{action:'visible',visible:screen==='media'&&activeModule===name});}
  function chrome(){
-  const show=!!lastAudio && !(screen==='media'&&activeModule==='music');
+  // A single, persistent host player controls Music in every Vetogram screen.
+  // In embedded Music the child mini bar is hidden, not the host controller.
+  const show=!!lastAudio;
   $('v6MiniPlayer').hidden=!show;
   root.classList.toggle('v6-has-audio',show);
   root.classList.toggle('v6-module-open',screen==='media'&&!!activeModule);
  }
- function moduleStatus(text,retry=false){
+ function moduleStatus(text,retry=false,notice=false){
   const status=$('v6ModuleStatus');
   status.textContent=text;status.hidden=!text;
-  status.dataset.phase=!text?'ready':retry?'failed':'loading';
+  const phase=!text?'ready':retry?'failed':notice?'notice':'loading';
+  status.dataset.phase=phase;
   $('v6ModuleRetry').hidden=!retry;
-  $('v6Frames').setAttribute('aria-busy',String(Boolean(text&&!retry)));
+  // A static search/unavailable notice is not an in-flight module request.
+  $('v6Frames').setAttribute('aria-busy',String(phase==='loading'));
  }
  function destroyMedia(){
   for(const item of frames.values()){clearTimeout(item.timer);item.element.src='about:blank';item.element.remove();}
@@ -42,12 +70,15 @@
  }
  function checkIdentity(){const current=identityKey();if(current!==identity){identity=current;destroyMedia();}}
  function showHub(){
+  mediaTrail.length=0;updateMediaBack();
   activeModule='';$('v6MediaHome').hidden=false;$('v6MediaStage').hidden=true;
   for(const item of frames.values())item.element.hidden=true;
   moduleStatus('');visibility();chrome();
  }
- function openModule(name,page,id,query){
+ function openModule(name,page,id,query,recordHistory=true){
   checkIdentity();const definition=definitions[name];if(!definition)return;
+  if(recordHistory)recordMediaVisit(name);
+  else updateMediaBack();
   window.VetoTelegramNavigate?.('media');activeModule=name;
   $('v6MediaHome').hidden=true;$('v6MediaStage').hidden=false;$('v6ModuleTitle').textContent=definition.title;
   document.querySelectorAll('.v6-module-switch [data-v6-module]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.v6Module===name)));
@@ -83,7 +114,7 @@
   if(item.ready && item.entryId){item.openRequestId=++openRequestSerial;send(name,{action:'open-item',id:item.entryId,requestId:item.openRequestId});item.entryId=null;}
   visibility();chrome();
  }
- $('v6MediaBack').onclick=showHub;
+ $('v6MediaBack').onclick=backInMedia;
  $('v6ModuleRetry').onclick=()=>{
   const name=activeModule,item=frames.get(name);if(!item)return;
   const page=item.lastPage,id=item.lastEntryId,query=item.lastQuery;
@@ -102,17 +133,24 @@
  $('v6Account').onclick=()=>$('profileButton')?.click();
  $('v6Appearance').onclick=()=>$('vetoGlobalThemeToggle')?.click();
  let playerReturnFocus=null;
+ const notifyPlayerViewChanged=()=>window.dispatchEvent(
+  new CustomEvent('vetogram:media-player-view-changed'));
  const closePlayer=()=>{
   const wasOpen=!$('v61Player').hidden;
   $('v61Player').hidden=true;root.classList.remove('v61-player-open');
   if(wasOpen)playerReturnFocus?.focus?.({preventScroll:true});
   playerReturnFocus=null;
+  if(wasOpen)notifyPlayerViewChanged();
  };
+ // The native Telegram Back closes only the full-screen player UI.
+ // Persistent audio continues exactly as it does for the visible × control.
+ window.VetoTelegramMediaBack=closePlayer;
  $('v6NowOpen').onclick=()=>{
   checkIdentity();
   if(!lastAudio)return; // Never open an empty or stale full-screen player.
   playerReturnFocus=document.activeElement||$('v6NowOpen');
   $('v61Player').hidden=false;root.classList.add('v61-player-open');
+  notifyPlayerViewChanged();
   $('v61PlayerClose').focus?.({preventScroll:true});
  };
  $('v61PlayerClose').onclick=closePlayer;
@@ -161,10 +199,20 @@
   // handshake succeeds; this also rejects late events from failed loads.
   if(!item.ready)return;
   if(message.type==='open-item-status'&&activeModule===name&&Number.isSafeInteger(message.requestId)&&message.requestId===item.openRequestId){
-   if(message.ok===false)moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false);
+   if(message.status==='search')moduleStatus('Для этой песни сохранено только название. Открыт поиск доступной записи — воспроизведение пока не началось.',false,true);
+   else if(message.ok===false)moduleStatus('Этот сохранённый материал не найден или его источник сейчас недоступен. Попробуй открыть его из каталога.',false,true);
    else moduleStatus('');
   }
-  if(message.type==='navigate' && message.target==='hub')showHub();
+  // Only the currently visible, owner-verified media frame may navigate.
+  // Allowlisted module IDs are not URLs; no child can inject a destination.
+  if(message.type==='navigate' && activeModule===name){
+   if(message.target==='hub')showHub();
+   else if(message.target==='module' &&
+     typeof message.module==='string' &&
+     Object.prototype.hasOwnProperty.call(definitions,message.module)){
+     openModule(message.module);
+   }
+  }
   if(name==='music'&&message.type==='music-library'&&Array.isArray(message.items)&&typeof window.dispatchEvent==='function'&&typeof CustomEvent!=='undefined'){
    const items=message.items.slice(0,250).filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string').map(x=>({
     kind:'music',id:x.id.slice(0,220),title:x.title.slice(0,150),
@@ -222,7 +270,9 @@
    $('v61PlayerSeek').value=String(data.duration>0?Math.round(data.position/data.duration*1000):0);
    chrome();
   }
-  if(name==='cinema' && message.type==='video-playing')send('music',{action:'audio',command:'pause'});
+  // Delayed iframe events from an already-hidden film must never silence music.
+  if(name==='cinema'&&message.type==='video-playing'&&screen==='media'&&activeModule==='cinema')
+    send('music',{action:'audio',command:'pause'});
  });
  window.addEventListener('veto:screen-changed',event=>{
   checkIdentity();const incoming=event.detail?.screen||'home';
@@ -233,7 +283,9 @@
  // An account switch invalidates every in-flight media document and Blob URL.
  window.addEventListener('focus',checkIdentity);
  document.addEventListener('visibilitychange',checkIdentity);
- setInterval(checkIdentity,1000);
+ // Identity is checked immediately on open, messages, focus and visibility.
+ // A ten-second foreground fallback avoids waking an idle WebView every second.
+ setInterval(()=>{if(!document.hidden)checkIdentity();},10000);
  const user=context().user;
  if(user)$('v6AccountName').textContent=[user.first_name,user.last_name].filter(Boolean).join(' ')||'Твой аккаунт Telegram';
  const requested=new URLSearchParams(location.search).get('screen');

@@ -432,7 +432,7 @@ export default async function handler(req, res) {
 
   const user = validateTelegramMiniApp(String(req.headers['x-telegram-init-data'] || ''), botToken);
   if (!user) {
-    res.status(401).json({ ok: false, error: 'Open VETO Telegram inside Telegram' });
+    res.status(401).json({ ok: false, error: 'Открой Vetogram внутри Telegram' });
     return;
   }
 
@@ -442,7 +442,7 @@ export default async function handler(req, res) {
   if (!config.configured) {
     res.status(503).json({
       ok: false,
-      error: 'Deep Intelligence backend is not configured yet',
+      error: 'Сервис авторизации Vetogram временно не настроен',
       config,
     });
     return;
@@ -752,8 +752,14 @@ export default async function handler(req, res) {
         telegramSendMayHaveOccurred=false;
       } catch (error) {
         const feedback=classifyTelegramAuthError(error);
-        if (leaseToken && telegramSendMayHaveOccurred && feedback.retryAfterSeconds)
-          await deferLoginCodeLease(userId,leaseToken,feedback.retryAfterSeconds).catch(()=>{});
+        // A timeout or storage failure AFTER calling Telegram may have delivered
+        // a code. Never tell the user to retry immediately: preserve the
+        // owner-scoped Neon lease, and do not attempt an automatic second send.
+        const deliveryUncertain=telegramSendMayHaveOccurred && feedback.status>=500 &&
+          !/API_ID_INVALID|API_HASH_INVALID|API_ID_PUBLISHED_FLOOD/i.test(String(error?.errorMessage || error?.message || error || ''));
+        if (leaseToken && telegramSendMayHaveOccurred && (feedback.retryAfterSeconds || deliveryUncertain))
+          await deferLoginCodeLease(userId,leaseToken,feedback.retryAfterSeconds || 180).catch(()=>{});
+        if (deliveryUncertain) throw new Error('AUTH_DELIVERY_UNCERTAIN');
         throw error;
       } finally {
         if (leaseToken && !telegramSendMayHaveOccurred)
@@ -821,8 +827,14 @@ export default async function handler(req, res) {
           ...codeStatus(next),reused:false,expiresAt:stored.expires_at});
       } catch (error) {
         const feedback=classifyTelegramAuthError(error);
-        if (leaseToken && telegramSendMayHaveOccurred && feedback.retryAfterSeconds)
-          await deferLoginCodeLease(userId,leaseToken,feedback.retryAfterSeconds).catch(()=>{});
+        // A timeout or storage failure AFTER calling Telegram may have delivered
+        // a code. Never tell the user to retry immediately: preserve the
+        // owner-scoped Neon lease, and do not attempt an automatic second send.
+        const deliveryUncertain=telegramSendMayHaveOccurred && feedback.status>=500 &&
+          !/API_ID_INVALID|API_HASH_INVALID|API_ID_PUBLISHED_FLOOD/i.test(String(error?.errorMessage || error?.message || error || ''));
+        if (leaseToken && telegramSendMayHaveOccurred && (feedback.retryAfterSeconds || deliveryUncertain))
+          await deferLoginCodeLease(userId,leaseToken,feedback.retryAfterSeconds || 180).catch(()=>{});
+        if (deliveryUncertain) throw new Error('AUTH_DELIVERY_UNCERTAIN');
         throw error;
       } finally {
         if (leaseToken && !telegramSendMayHaveOccurred) await releaseLoginCodeLease(userId,leaseToken).catch(()=>{});
@@ -859,14 +871,19 @@ export default async function handler(req, res) {
       }
       if (result.needsPassword) {
         const next = await sealJson({ ...auth, session: result.session }, `auth:${userId}`);
+        const passwordExpiresAt=new Date(Date.now() + AUTH_TTL_MS).toISOString();
         await saveAuthChallenge({
           telegram_user_id: userId,
           challenge_ciphertext: next,
           stage: 'password',
           created_at: challenge.created_at,
-          expires_at: new Date(Date.now() + AUTH_TTL_MS).toISOString(),
+          expires_at: passwordExpiresAt,
         });
-        res.status(200).json({ ok: true, stage: 'password', needsPassword: true });
+        // The 2FA challenge has a fresh TTL. Returning it lets a user close
+        // the sheet and resume without requesting another Telegram code.
+        res.status(200).json({
+          ok: true,stage:'password',needsPassword:true,expiresAt:passwordExpiresAt,
+        });
         return;
       }
 

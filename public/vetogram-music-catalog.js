@@ -69,9 +69,27 @@ const endpoint=(query,offset,limit=LIMIT)=>{
  u.searchParams.set("query",query);u.searchParams.set("limit",String(limit));u.searchParams.set("offset",String(offset));
  return u.href;
 };
-let items=[],q="",offset=0,busy=false,complete=false,active=null,group="ru",preset="ru";
+let items=[],q="",offset=0,busy=false,complete=false,active=null,group="world",preset="world";
 const failedStreams=new Set(),confirmedStreams=new Set();
 const status=$("catalogStatus"),list=$("catalogResults"),more=$("catalogMore"),queryInput=$("catalogQuery");
+// Only the catalog presentation changes: track ids, playback and source
+// validation remain owned by the existing Audius controller.
+const layout=$("v83CatalogLayout");
+let displayMode="covers";
+function setCatalogMode(mode){
+ if(mode!=="covers"&&mode!=="list")return false;
+ displayMode=mode;list.dataset.viewMode=mode;
+ layout?.querySelectorAll("[data-v83-view]").forEach(button=>{
+   const selected=button.dataset.v83View===mode;
+   button.classList.toggle("active",selected);
+   button.setAttribute("aria-pressed",String(selected));
+ });
+ return true;
+}
+layout?.querySelectorAll("[data-v83-view]").forEach(button=>{
+ button.addEventListener("click",()=>setCatalogMode(button.dataset.v83View));
+});
+setCatalogMode("covers");
 function textNode(tag,cls,value){const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=String(value);return el}
 function setStatus(s){status.textContent=s}
 function buttons(){
@@ -86,11 +104,12 @@ function buttons(){
   const selected=b.dataset.catalogGroup===group;b.classList.toggle("active",selected);b.setAttribute("aria-pressed",String(selected));
  }
 }
+const failedCoverUrls=new Set();
 function trackCard(track,index){
  const row=textNode("article","catalog-track");
- const cover=textNode("div","catalog-cover","♫");
- if(track.artwork){
-  const img=textNode("img");img.src=track.artwork;img.loading="lazy";img.alt="";img.onerror=()=>img.remove();cover.append(img);
+ const cover=textNode("div","catalog-cover",Array.from(track.title||"V")[0]?.toLocaleUpperCase()||"V");
+ if(track.artwork&&!failedCoverUrls.has(track.artwork)){
+  const img=textNode("img");img.src=track.artwork;img.loading="lazy";img.alt="";img.onerror=()=>{failedCoverUrls.add(track.artwork);img.remove()};cover.append(img);
  }
  const info=textNode("div","catalog-details");
  info.append(textNode("strong","",track.title),textNode("span","",track.artist),textNode("small","",track.duration?Math.floor(track.duration/60)+":"+String(Math.floor(track.duration%60)).padStart(2,"0"):"♫"));
@@ -186,7 +205,7 @@ document.addEventListener("vetogram:audio-playing",event=>{
  confirmedStreams.add(id);
  if(items.some(x=>x.id===id))setStatus("Реальное воспроизведение подтверждено.");
 });
-document.addEventListener("vetogram:catalog-open",()=>{if(!q){buttons();search(PRESETS.find(x=>x.id==="ru").q)}});
+document.addEventListener("vetogram:catalog-open",()=>{if(!q){buttons();search(PRESETS.find(x=>x.id==="world").q)}});
 buttons();
-window.VetogramCatalog=Object.freeze({search,selectPreset,loadMore,normalize,endpoint,state:()=>({query:q,count:items.length,offset,complete})});
+window.VetogramCatalog=Object.freeze({search,selectPreset,loadMore,normalize,endpoint,setCatalogMode,state:()=>({query:q,count:items.length,offset,complete,displayMode})});
 })();

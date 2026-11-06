@@ -41,7 +41,7 @@ test('mini-player follows actual frame state and unrelated messages cannot imper
  f.message(music,data,'https://evil.test');assert.equal(f.node('v6MiniPlayer').hidden,true);
  f.message(music,data,'https://vetogram.test',{});assert.equal(f.node('v6MiniPlayer').hidden,true);
  f.message(music,data);assert.equal(f.node('v6MiniPlayer').hidden,false);assert.equal(f.node('v6NowTitle').textContent,'Личный трек');assert.equal(f.node('v6NowSeek').value,'120');
- f.open('music');assert.equal(f.node('v6MiniPlayer').hidden,true);
+ f.open('music');assert.equal(f.node('v6MiniPlayer').hidden,false);
 });
 test('owner change destroys every media document and removes private player metadata',()=>{
  const f=fixture(),music=f.open('music');const cinema=f.open('cinema');
@@ -263,4 +263,60 @@ test('accessible loading, error and ready indicators track real module state',()
  assert.equal(f.node('v6ModuleStatus').dataset.phase,'ready');
  assert.equal(f.node('v6Frames').attrs['aria-busy'],'false');
  assert.equal(f.node('v6ModuleStatus').hidden,true);
+});
+
+test('Back visits cached Cinema, Music and Books in reverse order and ends at Media home',()=>{
+ const f=fixture();
+ const music=f.open('music'),cinema=f.open('cinema'),books=f.open('books');
+ for(const item of [music,cinema,books])f.message(item,{type:'ready'});
+ assert.equal(f.node('v6Frames').children.length,3);
+ assert.equal(f.node('v6MediaBack').attrs['aria-label'],'Назад: Кино');
+ assert.equal(books.hidden,false);
+ f.node('v6MediaBack').click();
+ assert.equal(cinema.hidden,false);
+ assert.equal(books.hidden,true);
+ assert.equal(f.node('v6MediaBack').attrs['aria-label'],'Назад: Музыка');
+ assert.equal(f.node('v6Frames').children.length,3,'Back must not recreate cached frames');
+ f.node('v6MediaBack').click();
+ assert.equal(music.hidden,false);
+ assert.equal(f.node('v6MediaBack').attrs['aria-label'],'Назад: Медиа');
+ f.node('v6MediaBack').click();
+ assert.equal(f.node('v6MediaHome').hidden,false);
+ assert.equal(f.node('v6MediaStage').hidden,true);
+ assert.equal(f.node('v6Frames').children.length,3,'Returning to the hub must retain reading/audio state');
+ f.open('books');
+ assert.equal(books.hidden,false);
+ assert.equal(f.node('v6Frames').children.length,3);
+ assert.equal(f.node('v6MediaBack').attrs['aria-label'],'Назад: Медиа','new navigation trail starts at the hub');
+});
+test('trusted child-initiated module switches participate in Back trail; invalid children cannot',()=>{
+ const f=fixture(),music=f.open('music'),cinema=f.open('cinema');
+ f.message(music,{type:'ready'});
+ f.message(cinema,{type:'ready'});
+ const before=f.node('v6Frames').children.length;
+ f.message(music,{type:'navigate',target:'module',module:'books'});
+ assert.equal(f.node('v6Frames').children.length,before,'hidden modules cannot navigate');
+ f.message(cinema,{type:'navigate',target:'module',module:'unknown'});
+ assert.equal(f.node('v6Frames').children.length,before,'unknown names are denied');
+ f.message(cinema,{type:'navigate',target:'module',module:'books'});
+ const books=f.node('v6Frames').children.at(-1);
+ assert.match(books.src,/^\/books\.html\?universe=1$/);
+ assert.equal(f.node('v6MediaBack').attrs['aria-label'],'Назад: Кино');
+ f.node('v6MediaBack').click();
+ assert.equal(cinema.hidden,false);
+ assert.equal(books.hidden,true);
+});
+test('owner change empties the navigation trail and cannot resurface another account module',()=>{
+ const f=fixture(),music=f.open('music'),cinema=f.open('cinema');
+ f.message(music,{type:'ready'});f.message(cinema,{type:'ready'});
+ f.window.Telegram.WebApp.initData='signed-new';
+ f.window.Telegram.WebApp.initDataUnsafe.user.id=99;
+ f.window.tick();
+ assert.equal(music.removed,true);assert.equal(cinema.removed,true);
+ assert.equal(f.node('v6MediaBack').attrs['aria-label'],'Назад: Медиа');
+ const fresh=f.open('books');
+ assert.notEqual(fresh,cinema);
+ f.node('v6MediaBack').click();
+ assert.equal(f.node('v6MediaHome').hidden,false);
+ assert.equal(f.node('v6Frames').children.at(-1),fresh,'old account modules must not be reused');
 });

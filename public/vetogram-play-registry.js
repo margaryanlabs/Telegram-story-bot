@@ -4,12 +4,14 @@
   const root = document.querySelector('.screen[data-screen="play"]');
   if (!root) return;
   const catalog = Object.freeze([
-    Object.freeze({id:'blotenq', name:'BLOTENQ?', genre:'cards', kind:'external', tags:['блот','блотенк','բլոտ','armenian','карты','друзья','турнир']}),
-    Object.freeze({id:'who', name:'WHO? / Group DNA', genre:'social', kind:'external', tags:['кто','друзья','анонимное','голосование','party']}),
+    Object.freeze({id:'blotenq', name:'BLOTENQ?', genre:'cards', kind:'upcoming', tags:['блот','блотенк','բլոտ','armenian','карты','друзья','турнир']}),
+    Object.freeze({id:'who', name:'WHO? / Group DNA', genre:'social', kind:'upcoming', tags:['кто','друзья','анонимное','голосование','party']}),
     Object.freeze({id:'reaction', name:'Реакция', genre:'arcade', kind:'local', tags:['скорость','таймер','реакция','reflex']}),
     Object.freeze({id:'pairs', name:'Четыре пары', genre:'cards', kind:'local', tags:['память','карты','пары','memory']}),
     Object.freeze({id:'tic', name:'Крестики-нолики', genre:'strategy', kind:'local', tags:['х','о','крестики','бот','tic-tac-toe']}),
     Object.freeze({id:'2048', name:'2048', genre:'puzzle', kind:'local', tags:['числа','логика','головоломка','2048']}),
+    Object.freeze({id:'mines', name:'Сапёр', genre:'puzzle', kind:'local', tags:['мины','логика','флажки','minesweeper','сапер']}),
+    Object.freeze({id:'snake', name:'Змейка', genre:'arcade', kind:'local', tags:['змейка','snake','аркада','скорость','яблоко']}),
   ]);
   window.VetogramPlayCatalog = catalog;
   const elements = Array.from(root.querySelectorAll('[data-vp-game]'));
@@ -34,7 +36,7 @@
   function category(item,selected) {
     if(selected==='all') return true;
     if(selected==='offline') return item.kind==='local';
-    if(selected==='online') return item.kind==='external';
+    if(selected==='online') return item.kind==='upcoming';
     if(selected==='cards') return item.genre==='cards';
     if(selected==='favorites') return (window.VetogramPlayFavorites || readFavorites()).has(item.id);
     return false;
@@ -51,7 +53,7 @@
     if(empty)empty.hidden=visible!==0;
     if(count)count.textContent=q||activeFilter!=='all'?
       visible+' из '+catalog.length+' игр':
-      catalog.filter(x=>x.kind==='local').length+' мини-игры · '+catalog.filter(x=>x.kind==='external').length+' клуба';
+      catalog.filter(x=>x.kind==='local').length+' доступны · '+catalog.filter(x=>x.kind==='upcoming').length+' в разработке';
   }
   filters.forEach(button=>button.addEventListener('click',()=>{
     const filter=button.dataset.vpFilter;

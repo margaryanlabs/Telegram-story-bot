@@ -1,21 +1,30 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<script src="/vetogram-media-context.js"></script>
+<script src="/vetogram-media-context.js?v=20261106-v9-08"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#08090c">
   <meta name="description" content="VETOGRAM Books — библиотека и удобная читалка книг прямо в Telegram.">
   <title>VETOGRAM Books — Читать</title>
   <link rel="icon" href="/veto-telegram-mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/books.css?v=14">
-  <link rel="stylesheet" href="/books-art-direction.css?v=1">
-  <link rel="stylesheet" href="/books-jacket-studio.css?v=2">
+  <link rel="stylesheet" href="/books.css?v=20261106-v9-08">
+  <link rel="stylesheet" href="/books-art-direction.css?v=20261106-v9-08">
+  <link rel="stylesheet" href="/books-jacket-studio.css?v=20261106-v9-08">
 
-  <script src="/books-import.js?v=2" defer></script>
-  <script src="/books.js?v=14" defer></script>
-<link rel="stylesheet" href="/vetogram-media-embedded.css">
-  <link rel="stylesheet" href="/vetogram-media-edition-62.css?v=20261031-media62">
+  <script src="/books-import.js?v=20261106-v9-08" defer></script>
+  <script src="/books.js?v=20261106-v9-08" defer></script>
+<link rel="stylesheet" href="/vetogram-media-embedded.css?v=20261106-v9-08">
+  <link rel="stylesheet" href="/vetogram-media-edition-62.css?v=20261106-v9-08">
+  <link rel="stylesheet" href="/vetogram-black-universe.css?v=20261106-v9-08" />
+  <link rel="stylesheet" href="/vetogram-showcase-v72.css?v=20261106-v9-08" />
+  <link rel="stylesheet" href="/vetogram-media-next-78.css?v=20261106-v9-08" />
+  <link rel="stylesheet" href="/vetogram-editorial-80.css?v=20261106-v9-08" />
+<script src="/vetogram-media-next-78.js?v=20261106-v9-08" defer></script>
+  <script src="/vetogram-editorial-80.js?v=20261106-v9-08" defer></script>
+  <link rel="stylesheet" href="/vetogram-reborn-modules.css?v=20261106-v9-08" />
+  <link rel="stylesheet" href="/vetogram-v9-books-reading.css?v=20261106-v9-08" />
+  <link rel="stylesheet" href="/vetogram-v9-explore.css?v=20261106-v9-08"/>
 </head>
 <body>
   <header class="topbar">
@@ -32,6 +41,7 @@
         <div class="continue-track" aria-hidden="true"><div id="continueFill"></div></div>
       </div>
       <button type="button" id="continueAction" class="continue-action">Продолжить <span>↗</span></button>
+      <div class="v9-reading-history" id="v9ReadingHistory" role="group" aria-label="Другие книги, которые вы читали" hidden></div>
     </section>
     <section class="hero hero-veto" aria-label="VETOGRAM Books — коллекция историй">
       <div class="veto-hero-noise" aria-hidden="true"></div>
@@ -53,6 +63,21 @@
       <div class="hero-side-index" aria-hidden="true"><span>ПОГРУЖЕНИЕ / В ЧТЕНИЕ</span><b>↗</b></div>
     </section>
 
+    <section class="v78-portal v78-books-portal" id="v78MediaHub" data-v78-module="books" aria-labelledby="v78BooksTitle">
+      <header class="v78-portal-heading"><div><span class="v78-kicker">VETOGRAM / READING ROOM</span><h2 id="v78BooksTitle">Время для новой главы.</h2><p>Вернись на сохранённую страницу, открой свою полку или читай доступные полные тексты во встроенной читалке.</p></div><span class="v78-portal-mark" aria-hidden="true">V/B</span></header>
+      <div class="v78-action-grid">
+        <button class="v78-action" data-v78-action="continue" type="button"><span class="v78-action-symbol" aria-hidden="true">↗</span><span class="v78-action-body"><strong>Продолжить</strong><small>Последняя сохранённая страница</small></span><span class="v78-action-arrow" aria-hidden="true">↗</span></button>
+        <button class="v78-action" data-v78-action="discover" type="button"><span class="v78-action-symbol" aria-hidden="true">▤</span><span class="v78-action-body"><strong>Читать сейчас</strong><small>Издания с доступным текстом</small></span><span class="v78-action-arrow" aria-hidden="true">↗</span></button>
+        <button class="v78-action" data-v78-action="library" type="button"><span class="v78-action-symbol" aria-hidden="true">♡</span><span class="v78-action-body"><strong>Моя полка</strong><small>Избранное и закладки</small></span><span class="v78-action-arrow" aria-hidden="true">↗</span></button>
+        <button class="v78-action" data-v78-action="import" type="button"><span class="v78-action-symbol" aria-hidden="true">＋</span><span class="v78-action-body"><strong>Свои книги</strong><small>Импорт EPUB, FB2, TXT</small></span><span class="v78-action-arrow" aria-hidden="true">↗</span></button>
+      </div>
+      <div class="v710-reading-summary" id="v710ReadingSummary" hidden>
+        <span class="v710-reading-bookmark" aria-hidden="true">▤</span>
+        <div class="v710-reading-copy"><small>ТЫ ЧИТАЛ</small><strong id="v710ReadingTitle"></strong><span id="v710ReadingPosition"></span></div>
+        <button type="button" class="v710-reading-return" data-v78-action="continue">Продолжить ↗</button>
+      </div>
+      <p class="v78-status" role="status" aria-live="polite"><span class="v78-status-dot" aria-hidden="true"></span><span id="v78MediaStatus">Полнота текста указывается на карточке книги. Каталог без текста не выдаём за читалку.</span></p>
+    </section>
     <section id="featuredEditions" class="featured-editions" aria-labelledby="featuredTitle">
       <div class="featured-editions-heading">
         <div><span class="featured-kicker">VETOGRAM / ВЫБОР РЕДАКЦИИ</span><h2 id="featuredTitle">Истории, в которые хочется войти.</h2></div>
@@ -61,14 +86,15 @@
       <div id="featuredEditionGrid" class="featured-edition-grid"></div>
     </section>
     <div class="veto-library-kicker" aria-hidden="true"><span>ИЗБРАННОЕ / ОТКРЫТОЕ / ЛИЧНОЕ</span><div></div><span>ТВОЯ СЛЕДУЮЩАЯ ГЛАВА</span></div>
+    <div class="book-mode-explainer" id="bookModeStatus" role="status" aria-live="polite">Книги ниже открываются в читалке. Полнота издания обозначена на карточке.</div>
     <div class="source-tabs" role="group" aria-label="Библиотека и язык">
-      <button type="button" data-books-source="complete" class="active" aria-pressed="true"><b>✦</b> ЧИТАТЬ ЦЕЛИКОМ</button>
-      <button type="button" data-books-source="hot200" aria-pressed="false"><b>200</b> ХИТЫ · НА РУССКОМ</button>
+      <button type="button" data-books-source="complete" class="active" aria-pressed="true"><b>✦</b> Читать книги</button>
+      <button type="button" data-books-source="hot200" aria-pressed="false"><b>200</b> Каталог · без полного текста</button>
       <button type="button" data-books-source="translated" aria-pressed="false"><b>🌍</b> Зарубежные · на русском</button>
       <button type="button" data-books-source="ru" aria-pressed="false"><b>РУ</b> Русская библиотека</button>
       <button type="button" data-books-source="hy" aria-pressed="false"><b>ՀՅ</b> Հայկական գրադարան</button>
       <button type="button" data-books-source="gutenberg" aria-pressed="false"><b>EN</b> Мировая классика</button>
-      <button type="button" data-books-source="spotlight" aria-pressed="false"><b>✦</b> Новинки и хиты · RU</button>
+      <button type="button" data-books-source="spotlight" aria-pressed="false"><b>✦</b> Новинки · каталог</button>
       <button type="button" data-books-source="genres" aria-pressed="false"><b>✧</b> Читать сейчас · RU</button>
       <button type="button" data-books-source="local" aria-pressed="false"><b>▤</b> Мои файлы · Офлайн</button>
     </div>
@@ -208,6 +234,7 @@
       <div class="reader-paper" id="readerPaper">
         <div class="reader-book-meta"><div class="reader-line"></div><span id="readerAuthor">АВТОР</span><h2 id="chapterTitle">Глава</h2><p id="pageNumber">Страница 1</p><div class="reader-volume-status" id="readerVolumeStatus" role="status">Проверяем объём текста…</div></div>
         <article class="reader-copy" id="readerCopy"></article>
+        <button type="button" id="readerRetry" class="reader-retry" hidden>Повторить загрузку текста</button>
         <div class="reader-page-ornament" aria-hidden="true">✦ &nbsp; VETOGRAM BOOKS &nbsp; ✦</div>
         <div class="end-mark">✦</div>
       </div>
@@ -230,6 +257,7 @@
     </div>
   </div>
 
-<script src="/vetogram-media-bridge.js" defer></script>
+<script src="/vetogram-media-bridge.js?v=20261106-v9-08" defer></script>
+  <script src="/vetogram-v9-explore.js?v=20261106-v9-08" defer></script>
 </body>
 </html>

@@ -64,12 +64,15 @@ test('server preserves outstanding code challenge and does not imply delivered S
   assert.match(repoApi,/delivery: auth\.delivery/);
 });
 
-test('five real destinations retain AI as a secondary route',()=>{
+test('four primary destinations retain Profile and AI as secondary routes',()=>{
   const nav=html.split('<nav class="bottom-nav')[1]?.split('</nav>')[0];
   assert.ok(nav,'bottom navigation missing');
   const tabs=[...nav.matchAll(/class="nav-item(?: [^"]*)?" data-nav="([^"]+)"/g)]
     .map(matches=>matches[1]);
-  assert.deepEqual(tabs,['telegram','publish','media','privacy','profile']);
+  assert.deepEqual(tabs,['telegram','publish','media','privacy']);
+  assert.match(html,/id="profileButton"/);
+  assert.match(app,/data-sheet-action="open-profile"/);
+  assert.match(app,/switchScreen\('profile'\)/);
   assert.match(html,/id="vetoNavHome"/);
   assert.match(app,/vetoNavHome'\)\?\.addEventListener/);
   assert.match(app,/ai:'profile'/);

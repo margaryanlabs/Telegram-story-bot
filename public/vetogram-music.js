@@ -8,6 +8,8 @@ const audio=$("audio"),app=$("app"),MAX_FILE=30*1048576,MAX_BATCH=120*1048576;
 const scope=window.VetogramMediaContext?.scope||"device";
 const key="vetogram-music-v1:"+scope,DB_NAME="vetogram-music-private-v1:"+scope,STORE="tracks";
 let playbackGeneration=0;
+const failedArtworkUrls=new Set();
+const coverLetter=track=>Array.from(clean(track?.title||"V",40))[0]?.toLocaleUpperCase()||"V";
 const moods={chill:"chill",electronic:"electronic","hip-hop":"hip hop"};
 const state={page:"home",tracks:[],search:[],radios:[],local:[],liked:[],metadata:[],streams:[],queue:[],index:-1,now:null,shuffle:false,repeat:"all",mood:"ember",source:"",playRequested:false,localUrls:[],activeController:null,radioController:null,sleepDeadline:0,sleepTimer:null,db:null};
 const dom=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=String(text);return e};
@@ -48,7 +50,7 @@ function showPage(page){
  if(page==="mixter")document.dispatchEvent(new CustomEvent("vetogram:mixter-open"));
 }
 $$("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
-$("quickSearch").onclick=()=>showPage("search");$("heroExplore").onclick=()=>{showPage("catalog");window.VetogramCatalog?.selectPreset?.("ru")};
+$("quickSearch").onclick=()=>showPage("search");$("heroExplore").onclick=()=>{showPage("catalog");window.VetogramCatalog?.selectPreset?.("world")};
 $("themeSwitch").onclick=()=>{state.mood=state.mood==="ember"?"aurora":"ember";document.documentElement.dataset.ambient=state.mood;persist();send(state.mood==="aurora"?"Атмосфера Aurora":"Атмосфера Ember")};
 const songId=x=>String(x?.id||"");
 function favorited(t){return state.liked.some(x=>x.id===songId(t))}
@@ -60,8 +62,8 @@ function toggleLike(track){if(!track)return;const pos=state.liked.findIndex(x=>x
 function row(track,index,context){
  const e=dom("article","track-row"+(state.now?.id===track.id?" active":""));
  const no=dom("span","track-number",String(index+1).padStart(2,"0"));
- const cover=dom("div","track-cover","♫"),url=safe(track.artwork);
- if(url){const img=dom("img");img.src=url;img.alt="";img.loading="lazy";img.addEventListener("error",()=>img.remove());cover.append(img)}
+ const cover=dom("div","track-cover",coverLetter(track)),url=safe(track.artwork);
+ if(url&&!failedArtworkUrls.has(url)){const img=dom("img");img.src=url;img.alt="";img.loading="lazy";img.addEventListener("error",()=>{failedArtworkUrls.add(url);img.remove()});cover.append(img)}
  const main=dom("div","track-info");main.append(dom("b","",track.title||"Без названия"),dom("small","",track.artist||"Неизвестный исполнитель"));
  const tag=dom("span","source-tag",track.source==="local"?"МОЙ ФАЙЛ":track.source==="stream"?"ПО ССЫЛКЕ":track.source==="demo"?"ОРИГИНАЛЬНОЕ ДЕМО":track.source==="radio"?"LIVE RADIO":track.source==="archive"?"ARCHIVE · CC":track.source==="ccmixter"?"CCMIXTER · CC":track.source==="openverse"?"♫ · CC":track.source==="metadata"?"ТОЛЬКО СПИСОК":"AUDIUS");
  const like=dom("button","track-btn like",favorited(track)?"♥":"♡");
@@ -135,10 +137,10 @@ function playTrack(track,collection){
    {detail:{trackId:String(track.id||"")}}));
  $("miniTitle").textContent=track.title;$("miniArtist").textContent=track.artist;
  $("studioTitle").textContent=track.title;$("studioArtist").textContent=track.artist;
- const art=safe(track.artwork),mini=$("miniArt"),cover=$("studioCover");
+ const art=safe(track.artwork),mini=$("miniArt"),cover=$("studioCover"),letter=coverLetter(track);
  mini.replaceChildren();cover.replaceChildren();
- if(art){for(const el of [mini,cover]){const img=dom("img");img.src=art;img.alt="";img.addEventListener("error",()=>{img.remove();el.textContent="V"});el.append(img)}}
- else {mini.textContent="♫";cover.textContent="V"}
+ if(art&&!failedArtworkUrls.has(art)){for(const el of [mini,cover]){const img=dom("img");img.src=art;img.alt="";img.addEventListener("error",()=>{failedArtworkUrls.add(art);img.remove();el.textContent=letter});el.append(img)}}
+ else {mini.textContent=letter;cover.textContent=letter}
  if(track.source==="radio")$("studioDuration").textContent="LIVE";
  audio.pause();audio.removeAttribute("src");
  // The stream is always a real provider URL or an in-memory, user-owned Blob URL.
@@ -177,8 +179,24 @@ $("repeatButton").onclick=()=>{state.repeat=state.repeat==="all"?"one":state.rep
 $("miniLike").onclick=()=>toggleLike(state.now);$("studioLike").onclick=()=>toggleLike(state.now);
 function scrub(value){const d=audio.duration;if(Number.isFinite(d)&&d>0)audio.currentTime=Math.min(d,Math.max(0,Number(value)/1000*d))}
 $("miniSeek").oninput=e=>scrub(e.target.value);$("studioSeek").oninput=e=>scrub(e.target.value);
-$("volumeInput").oninput=e=>{audio.volume=Number(e.target.value)/100};
-$("speedSelect").onchange=e=>{audio.playbackRate=Number(e.target.value)};
+// Account-scoped device preferences: no audio bytes, identifiers or secrets
+// are persisted. The sleep timer remains transient by design.
+const PLAYER_PREFS_KEY=key+':player-controls:v1';
+function savePlayerControls(){
+ try{localStorage.setItem(PLAYER_PREFS_KEY,JSON.stringify({
+  volume:Math.round(audio.volume*100),rate:audio.playbackRate
+ }));}catch{}
+}
+$("volumeInput").oninput=e=>{
+ const value=Number(e.target.value);
+ if(Number.isFinite(value))audio.volume=Math.min(1,Math.max(0,value/100));
+ savePlayerControls();
+};
+$("speedSelect").onchange=e=>{
+ const value=Number(e.target.value);
+ if([.75,1,1.25,1.5,2].includes(value))audio.playbackRate=value;
+ savePlayerControls();
+};
 $("sleepSelect").onchange=e=>{if(state.sleepTimer)clearInterval(state.sleepTimer);const n=Number(e.target.value);
  state.sleepDeadline=n?Date.now()+n*60000:0;state.sleepTimer=n?setInterval(()=>{if(Date.now()>=state.sleepDeadline){audio.pause();clearInterval(state.sleepTimer);state.sleepTimer=null;$("sleepSelect").value="0";send("Таймер сна остановил музыку")}},1000):null};
 function syncPlayer(){
@@ -222,6 +240,19 @@ for(const event of ["play","playing","pause","ended","durationchange","timeupdat
  syncPlayer();
 });
 audio.volume=.85;
+try{
+ const prefs=JSON.parse(localStorage.getItem(PLAYER_PREFS_KEY)||'null');
+ if(prefs&&typeof prefs==='object'){
+  const volume=Number(prefs.volume),rate=Number(prefs.rate);
+  if(Number.isFinite(volume)&&volume>=0&&volume<=100){
+   audio.volume=volume/100;$("volumeInput").value=String(Math.round(volume));
+  }
+  if([.75,1,1.25,1.5,2].includes(rate)){
+   audio.playbackRate=rate;$("speedSelect").value=String(rate);
+  }
+ }
+}catch{} // Corrupt preferences or private mode must not block music.
+
 try{if("mediaSession"in navigator){for(const [key,fn] of Object.entries({
  play:()=>audio.play().catch(()=>{}),pause:()=>audio.pause(),
  previoustrack:()=>next(-1),nexttrack:()=>next(1),
@@ -271,7 +302,9 @@ async function loadTrending(){
  try{const r=await apiJson("https://api.audius.co/v1/tracks/trending?limit=12",abort.signal);
  if(state.activeController!==abort)return;
  state.tracks=unique((Array.isArray(r?.data)?r.data:[]).map(mapAudius).filter(Boolean));renderHome();
- }catch{if(state.activeController===abort){$("homeTracks").replaceChildren(dom("div","empty-state","Музыка сейчас не отвечает. Попробуй поиск или свои файлы."));}}
+ document.dispatchEvent(new CustomEvent("vetogram:music-trending",{detail:{status:"ready",count:state.tracks.length}}));
+ }catch{if(state.activeController===abort){$("homeTracks").replaceChildren(dom("div","empty-state","Музыка сейчас не отвечает. Попробуй поиск или свои файлы."));
+ document.dispatchEvent(new CustomEvent("vetogram:music-trending",{detail:{status:"error",count:0}}));}}
  finally{clearTimeout(timer)}
 }
 function renderHome(){paintRows("homeTracks",unique([...state.local,...state.tracks]),"home","Музыка пока не загрузилась. Попробуй поиск или добавь свою запись.")}
@@ -316,7 +349,7 @@ function renderRadio(){
  if(!state.radios.length){box.append(dom("div","empty-state","По этому запросу станций нет."));return}
  state.radios.forEach(t=>{
  const row=dom("div","radio-card");const cover=dom("div","track-cover","◉");
- if(t.artwork){const img=dom("img");img.src=t.artwork;img.alt="";img.onerror=()=>img.remove();cover.append(img)}
+ if(t.artwork&&!failedArtworkUrls.has(t.artwork)){const img=dom("img");img.src=t.artwork;img.alt="";img.onerror=()=>{failedArtworkUrls.add(t.artwork);img.remove()};cover.append(img)}
  const details=dom("div");details.append(dom("b","",t.title),dom("small","",t.artist));
  const actions=dom("div");
  const p=dom("button","radio-action","▶ Слушать");p.type="button";p.onclick=()=>playTrack(t,state.radios);
@@ -351,15 +384,38 @@ document.querySelectorAll("[data-audio-radio]").forEach(b=>b.addEventListener("c
 document.querySelectorAll("[data-audio-preset]").forEach(b=>b.addEventListener("click",()=>{
  showPage("catalog");window.VetogramCatalog?.selectPreset?.(b.dataset.audioPreset);
 }));
-function openDb(){return new Promise((resolve,reject)=>{if(!("indexedDB"in window))return resolve(null);
- const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:"id"})};
- req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);req.onblocked=()=>reject(Error("IndexedDB blocked"))})}
+function openDb(){return new Promise((resolve,reject)=>{
+ if(!("indexedDB"in window))return resolve(null);
+ let settled=false;
+ const done=(error,db)=>{
+  if(settled){try{db?.close?.()}catch{}return}
+  settled=true;clearTimeout(timer);
+  if(error)reject(error);else resolve(db);
+ };
+ const timer=setTimeout(()=>done(Error("IndexedDB open timed out")),6000);
+ try{
+  const req=indexedDB.open(DB_NAME,1);
+  req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:"id"})};
+  req.onsuccess=()=>done(null,req.result);
+  req.onerror=()=>done(req.error||Error("IndexedDB unavailable"));
+  req.onblocked=()=>done(Error("IndexedDB blocked"));
+ }catch(error){done(error)}
+})}
 function saveDb(record){if(!state.db)return Promise.reject(Error("No IndexedDB"));
  return new Promise((resolve,reject)=>{const tx=state.db.transaction(STORE,"readwrite");
  tx.objectStore(STORE).put(record);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)})}
 async function loadDb(){
  try{state.db=await openDb();if(!state.db)return;
- const data=await new Promise((resolve,reject)=>{const req=state.db.transaction(STORE,"readonly").objectStore(STORE).getAll();req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});
+ const data=await new Promise((resolve,reject)=>{
+  let settled=false;
+  const done=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);if(error)reject(error);else resolve(value)};
+  const timer=setTimeout(()=>done(Error("IndexedDB read timed out")),6000);
+  try{
+   const req=state.db.transaction(STORE,"readonly").objectStore(STORE).getAll();
+   req.onsuccess=()=>done(null,req.result);
+   req.onerror=()=>done(req.error||Error("IndexedDB read failed"));
+  }catch(error){done(error)}
+ });
  const order=jLoad("vetogram-music-local-order-v1:"+scope,[]);
  data.sort((a,b)=>{const ai=Array.isArray(order)?order.indexOf(a.id):-1,bi=Array.isArray(order)?order.indexOf(b.id):-1;return (ai<0?9999:ai)-(bi<0?9999:bi)});
  for(const x of data.slice(0,200)){if(!x?.blob||!x.title)continue;
@@ -574,13 +630,13 @@ async function openSavedById(id){
    const query=[entry.subtitle,entry.title].filter(Boolean).join(" ");
    showPage("search");$("searchInput").value=query;runSearch(query);
    send("Запись не сохранена для прямого запуска. Найди доступный источник в поиске.");
-   return true;
+   return "search"; // The player has NOT started; a discovery screen was opened.
   }
   return false;
  }
  if(track.source==="metadata"){
   showPage("search");const query=[track.artist,track.title].filter(Boolean).join(" ");
-  $("searchInput").value=query;runSearch(query);return true;
+  $("searchInput").value=query;runSearch(query);return "search";
  }
  if(track.source==="local"&&!state.local.some(x=>x.id===id&&x.url)){
   send("Локальный аудиофайл пока недоступен. Открой библиотеку и проверь импорт.");
@@ -600,6 +656,7 @@ function getLibrary(){
  return [...selected.values()].slice(0,250);
 }
 window.VetogramMusic=Object.freeze({showPage,search:runSearch,play:playTrack,openSavedById,getLibrary,
+ trending:()=>state.tracks.slice(),refreshTrending:loadTrending,
  generation:()=>playbackGeneration,now:()=>state.now,queue:()=>state.queue.slice(),local:()=>state.local.slice(),liked:()=>state.liked.slice(),metadata:()=>state.metadata.slice(),
  importList,removeLocal,moveLocal,addStreams,removeStream,moveStream,notifyLibrary,streams:()=>state.streams.slice(),toggleLike,
  state:()=>({page:state.page,now:state.now?.title||null,local:state.local.length,liked:state.liked.length,imported:state.metadata.length})});

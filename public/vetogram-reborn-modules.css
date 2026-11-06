@@ -1,0 +1,680 @@
+/* VETOGRAM REBORN RB9 / EMBEDDED MEDIA ATELIER
+ * Shared visual hierarchy for the real Music, Cinema and Books documents.
+ * The iframe router, licenses, artwork URLs and media controllers are owned
+ * by their existing modules; this file contains presentation only.
+ */
+
+/* Shared accessibility and motion contract. Scope to module roots. */
+#app.app, .cinema-shell, .books-main {
+  --vm9-ink:#f5f5f5;
+  --vm9-muted:#bcbcbc;
+  --vm9-dim:#979797;
+  --vm9-line:rgba(200,200,200,.17);
+  --vm9-accent:#d6d6d6;
+  --vm9-bg:#101010;
+  --vm9-panel:#1b1b1b;
+  --vm9-raised:#282828;
+  --vm9-shadow:0 16px 42px rgba(7,7,7,.19);
+  --vm9-ease:cubic-bezier(.22,.75,.24,1);
+}
+:is(#app.app,.cinema-shell,.books-main) :is(button,a,input,select):focus-visible{
+  outline:2px solid var(--vm9-accent) !important;
+  outline-offset:3px !important;
+}
+:is(#app.app,.cinema-shell,.books-main) :is(button,a){
+  -webkit-tap-highlight-color:transparent;
+}
+:is(#app.app,.cinema-shell,.books-main) :is(h1,h2,h3,strong){
+  text-wrap:pretty;
+}
+/* Music — sound-first editorial cards, actual track metadata and covers. */
+#app.app .main {
+  color:var(--vm9-ink);
+}
+#app.app .sidebar{
+  background:linear-gradient(155deg,#191919,#111111) !important;
+  border-right:1px solid var(--vm9-line) !important;
+}
+#app.app .sidebar :is(.brand,.nav-item){
+  border-radius:12px !important;
+}
+#app.app .sidebar .nav-item.active{
+  color:#f4f4f4 !important;
+  background:rgba(188,188,188,.13) !important;
+  border-color:var(--vm9-line) !important;
+}
+#app.app .topbar{
+  border-bottom:1px solid var(--vm9-line) !important;
+  background:rgba(18,18,18,.96) !important;
+}
+#app.app .page-title h1{
+  color:var(--vm9-ink) !important;
+  letter-spacing:-.055em !important;
+  font-weight:800 !important;
+  line-height:1.06 !important;
+  font-size:clamp(32px,5.6vw,58px) !important;
+}
+#app.app .page-title p{
+  color:var(--vm9-muted) !important;
+  max-width:65ch !important;
+  line-height:1.6 !important;
+}
+#app.app .hero{
+  border:1px solid var(--vm9-line) !important;
+  border-radius:25px !important;
+  background:
+    radial-gradient(ellipse 65% 95% at 93% 25%,rgba(161,161,161,.20),transparent 74%),
+    linear-gradient(115deg,#1d1d1d,#272727 66%,#202020) !important;
+  box-shadow:var(--vm9-shadow) !important;
+}
+#app.app .hero :is(h1,h2){
+  color:#f7f7f7 !important;
+  letter-spacing:-.06em !important;
+}
+#app.app .hero p{
+  color:#cccccc !important;
+  line-height:1.62 !important;
+}
+#app.app .section-head h2{
+  color:var(--vm9-ink) !important;
+  letter-spacing:-.042em !important;
+  font-weight:770 !important;
+}
+#app.app :is(.track-list,.mood-grid,.catalog-results,.licensed-home-tracks){
+  min-width:0;
+}
+#app.app :is(.mood-card,.track,.track-row,.song-row,.licensed-track,.v78-action){
+  border-color:var(--vm9-line) !important;
+  background:var(--vm9-panel) !important;
+  box-shadow:none !important;
+}
+#app.app :is(.track,.track-row,.song-row,.licensed-track){
+  min-height:58px;
+}
+#app.app :is(.track,.track-row,.song-row,.licensed-track) :is(strong,b){
+  color:var(--vm9-ink);
+}
+#app.app :is(.track,.track-row,.song-row,.licensed-track) :is(small,.artist){
+  color:var(--vm9-muted);
+}
+#app.app :is(.track img,.track-row img,.licensed-track img,.cover img,.album-art img){
+  object-fit:cover;
+  border-radius:11px;
+}
+#app.app :is(.big-search,.search-pill,#quickSearch,#searchInput,#catalogQuery){
+  border-color:var(--vm9-line) !important;
+  border-radius:13px !important;
+  color:var(--vm9-ink) !important;
+}
+#app.app :is(.big-search,.search-pill):focus-within{
+  border-color:var(--vm9-accent) !important;
+  box-shadow:0 0 0 3px rgba(192,192,192,.12) !important;
+}
+#app.app :is(.primary-btn,.v78-now-toggle):not(:disabled){
+  background:#e0e0e0 !important;
+  color:#242424 !important;
+  border-color:#e0e0e0 !important;
+}
+#app.app :is(.section-head,.page-title,.v78-portal-heading) small {
+  color:var(--vm9-muted);
+}
+/* Cinema — posters must remain the real catalog artwork, never placeholder
+   cards painted as a licensed film that is unavailable. */
+.cinema-shell{
+  color:var(--vm9-ink);
+}
+.cinema-shell .cinema-header{
+  background:rgba(17,17,17,.94) !important;
+  border-color:var(--vm9-line) !important;
+}
+.cinema-shell .cinema-brand-words strong{
+  color:var(--vm9-ink) !important;
+  letter-spacing:-.025em !important;
+}
+.cinema-shell .cinema-hero {
+  min-height:clamp(310px,42vw,490px);
+  border:1px solid var(--vm9-line) !important;
+  border-radius:25px !important;
+  overflow:hidden;
+  box-shadow:var(--vm9-shadow) !important;
+  background:
+    radial-gradient(ellipse at 80% 20%,rgba(165,165,165,.18),transparent 65%),
+    linear-gradient(115deg,#191919,#252525) !important;
+}
+.cinema-shell .cinema-hero-bg{
+  /* Existing dynamic real artwork still paints here. */
+  opacity:.82;
+}
+.cinema-shell .cinema-hero-copy{
+  position:relative;
+  z-index:2;
+}
+.cinema-shell .cinema-hero h1{
+  font-size:clamp(35px,5.6vw,66px) !important;
+  letter-spacing:-.055em !important;
+  line-height:1.06 !important;
+  font-weight:780 !important;
+  color:#f8f8f8 !important;
+}
+.cinema-shell .cinema-hero p{
+  color:#cdcdcd !important;
+  line-height:1.63 !important;
+}
+.cinema-shell .cinema-primary:not(:disabled){
+  color:#242424 !important;
+  background:#e8e8e8 !important;
+  border-color:#e8e8e8 !important;
+  border-radius:12px !important;
+  min-height:45px !important;
+}
+.cinema-shell .cinema-secondary{
+  border:1px solid rgba(213,213,213,.22) !important;
+  background:rgba(198,198,198,.08) !important;
+  color:#f4f4f4 !important;
+  border-radius:12px !important;
+  min-height:45px !important;
+}
+.cinema-shell .cinema-section{
+  margin-block:20px 30px !important;
+}
+.cinema-shell .cinema-section-head h2{
+  font-size:clamp(21px,3vw,30px) !important;
+  letter-spacing:-.045em !important;
+  color:var(--vm9-ink) !important;
+  font-weight:780 !important;
+}
+.cinema-shell .cinema-section-head :is(p,small){
+  color:var(--vm9-muted) !important;
+}
+.cinema-shell .cinema-rail{
+  scroll-snap-type:x proximity;
+  scroll-padding:8px;
+  gap:12px !important;
+}
+.cinema-shell .cinema-card{
+  border:1px solid var(--vm9-line) !important;
+  border-radius:15px !important;
+  overflow:hidden;
+  background:var(--vm9-panel) !important;
+  box-shadow:none !important;
+  min-width:0;
+  transition:transform 180ms var(--vm9-ease),border-color 180ms var(--vm9-ease);
+}
+.cinema-shell .cinema-card-art{
+  overflow:hidden;
+  background:#272727;
+}
+.cinema-shell .cinema-card-art img{
+  max-width:100%;
+  object-fit:cover;
+  /* Never hide external-provider artwork error states. */
+  filter:none !important;
+}
+.cinema-shell .cinema-card-name{
+  font-size:13px !important;
+  font-weight:700 !important;
+  line-height:1.42 !important;
+  color:var(--vm9-ink) !important;
+}
+.cinema-shell :is(#cinemaSearch,.cinema-search){
+  background:var(--vm9-panel) !important;
+  border-color:var(--vm9-line) !important;
+  color:var(--vm9-ink) !important;
+}
+.cinema-shell .cinema-tab{
+  min-height:43px !important;
+  border-radius:12px !important;
+  border-color:var(--vm9-line) !important;
+  color:var(--vm9-muted) !important;
+  white-space:nowrap;
+}
+.cinema-shell .cinema-tab.active{
+  color:#f5f5f5 !important;
+  border-color:rgba(211,211,211,.32) !important;
+  background:rgba(189,189,189,.15) !important;
+}
+/* Keep player, quality labels, provider metadata and actual error messages. */
+.cinema-shell :is(.cinema-player-shell,.cinema-details){
+  border:1px solid var(--vm9-line) !important;
+  border-radius:17px !important;
+}
+.cinema-shell :is(.cinema-empty,.cinema-message){
+  color:var(--vm9-muted) !important;
+}
+/* Books — calm literary presentation. Reader typography, page width,
+   text background, bookmarks, saved location and full text are the reader's
+   own adjustable settings and MUST NOT be reset here. */
+.books-main .hero.hero-veto{
+  min-height:320px !important;
+  padding:clamp(25px,5vw,54px) !important;
+  border:1px solid var(--vm9-line) !important;
+  border-radius:24px !important;
+  background:
+    radial-gradient(ellipse 65% 95% at 84% 15%,rgba(178,178,178,.15),transparent 72%),
+    linear-gradient(110deg,#202020,#262626) !important;
+  box-shadow:var(--vm9-shadow) !important;
+}
+.books-main .hero.hero-veto h1{
+  color:#f6f6f6 !important;
+  font-size:clamp(34px,6.5vw,67px) !important;
+  line-height:1.05 !important;
+  letter-spacing:-.056em !important;
+}
+.books-main .hero.hero-veto h1 i{
+  color:#d7d7d7 !important;
+}
+.books-main .hero.hero-veto .hero-lead{
+  color:#cecece !important;
+  line-height:1.66 !important;
+  font-size:13px !important;
+}
+.books-main .hero.hero-veto :is(.hero-action-main,.hero-action-secondary){
+  min-height:45px !important;
+  border-radius:12px !important;
+  font-weight:720 !important;
+}
+.books-main .hero.hero-veto .hero-action-main{
+  background:#e4e4e4 !important;
+  color:#252525 !important;
+  border-color:#e4e4e4 !important;
+}
+.books-main .hero.hero-veto .hero-action-secondary{
+  background:rgba(209,209,209,.10) !important;
+  border:1px solid rgba(208,208,208,.22) !important;
+  color:#f6f6f6 !important;
+}
+.books-main .continue-shelf{
+  border:1px solid var(--vm9-line) !important;
+  border-radius:19px !important;
+  background:var(--vm9-panel) !important;
+}
+.books-main .continue-info h2{
+  font-size:clamp(19px,3vw,28px) !important;
+  letter-spacing:-.03em !important;
+  color:var(--vm9-ink) !important;
+}
+.books-main :is(.catalog-bar,.book-grid,.source-tabs){
+  min-width:0;
+}
+.books-main .search{
+  min-height:47px !important;
+  background:var(--vm9-panel) !important;
+  border:1px solid var(--vm9-line) !important;
+  border-radius:13px !important;
+  color:var(--vm9-ink) !important;
+}
+.books-main .search:focus-within{
+  border-color:var(--vm9-accent) !important;
+  box-shadow:0 0 0 3px rgba(195,195,195,.12) !important;
+}
+.books-main .book{
+  min-width:0;
+  border-radius:14px !important;
+  border:1px solid var(--vm9-line) !important;
+  overflow:hidden;
+  background:var(--vm9-panel) !important;
+  box-shadow:none !important;
+  transition:border-color 180ms var(--vm9-ease),transform 180ms var(--vm9-ease);
+}
+.books-main .book :is(img,.book-cover){
+  object-fit:cover;
+  max-width:100%;
+}
+.books-main .book :is(h3,strong){
+  color:var(--vm9-ink) !important;
+  line-height:1.35;
+}
+.books-main .book :is(p,small){
+  color:var(--vm9-muted) !important;
+  line-height:1.45;
+}
+.books-main #catalogStatus{
+  color:var(--vm9-muted) !important;
+}
+.books-main :is(#loadMore,#heroMyBooks){
+  min-height:44px;
+}
+.books-main :is(.featured-editions,.featured-edition-grid){
+  min-width:0;
+}
+/* Restore the active theme of the reader itself. Do not style #reader,
+   .reader-paper, .reader-copy, fonts or progress controls here. */
+@media(hover:hover) and (pointer:fine){
+  .cinema-shell .cinema-card:hover,
+  .books-main .book:hover{
+    transform:translateY(-2px);
+    border-color:rgba(215,215,215,.36) !important;
+  }
+}
+@media(max-width:650px){
+  #app.app .page-title h1{font-size:clamp(30px,7.7vw,43px) !important}
+  #app.app .hero{border-radius:19px !important;min-height:270px !important}
+  .cinema-shell .cinema-hero{
+    border-radius:19px !important;
+    min-height:340px !important;
+  }
+  .cinema-shell .cinema-hero h1{
+    font-size:clamp(30px,8vw,45px) !important;
+  }
+  .cinema-shell .cinema-card{border-radius:13px !important}
+  .books-main .hero.hero-veto{
+    border-radius:19px !important;
+    padding:25px 18px !important;
+    min-height:280px !important;
+  }
+  .books-main .hero.hero-veto h1{
+    font-size:clamp(30px,7.8vw,45px) !important;
+  }
+  .books-main .book{border-radius:12px !important}
+  .v78-action-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media(max-width:370px){
+  .v78-action-grid{grid-template-columns:1fr !important}
+  .cinema-shell .cinema-hero h1{font-size:29px !important}
+}
+@media(prefers-reduced-motion:reduce){
+  :is(#app.app,.cinema-shell,.books-main) :is(.cinema-card,.book,.hero,.track,.track-row){
+    animation:none !important;
+    transition:none !important;
+    transform:none !important;
+  }
+}
+@media(pointer:coarse){
+  .cinema-shell .cinema-card:hover,
+  .books-main .book:hover{
+    transform:none !important;
+  }
+}
+
+
+/* Real parent-app appearance is supplied by vetogram-media-context.js.
+   Preserve Pearl/Linen inside the iframe rather than forcing the new dark
+   catalog material over the explicit light-theme selection. */
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+:is(#app.app,.cinema-shell,.books-main) {
+  --vm9-ink:#363636;
+  --vm9-muted:#606060;
+  --vm9-dim:#727272;
+  --vm9-line:rgba(75,75,75,.19);
+  --vm9-accent:#5a5a5a;
+  --vm9-bg:#f8f8f8;
+  --vm9-panel:#fff;
+  --vm9-raised:#f1f1f1;
+  --vm9-shadow:0 12px 30px rgba(57,57,57,.07);
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+#app.app :is(.sidebar,.topbar,.mood-card,.track,.track-row,.song-row,.licensed-track,.v78-action) {
+  color:var(--vm9-ink) !important;
+  background:var(--vm9-panel) !important;
+  border-color:var(--vm9-line) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+#app.app .sidebar .nav-item.active{
+  color:var(--vm9-accent) !important;
+  background:rgba(105,105,105,.12) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+#app.app .hero,
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.cinema-shell .cinema-hero,
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.books-main .hero.hero-veto{
+  background:linear-gradient(115deg,#fff,#f2f2f2) !important;
+  border-color:var(--vm9-line) !important;
+  color:var(--vm9-ink) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+#app.app .hero :is(h1,h2,p),
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.cinema-shell .cinema-hero :is(h1,p),
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.books-main .hero.hero-veto :is(h1,.hero-lead){
+  color:var(--vm9-ink) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.cinema-shell :is(.cinema-card,.cinema-search,.cinema-tab),
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.books-main :is(.book,.search,.continue-shelf) {
+  background:var(--vm9-panel) !important;
+  border-color:var(--vm9-line) !important;
+  color:var(--vm9-ink) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.cinema-shell .cinema-tab.active{
+  color:var(--vm9-accent) !important;
+  background:rgba(120,120,120,.12) !important;
+  border-color:rgba(90,90,90,.28) !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.books-main .hero.hero-veto h1 i{
+  color:#676767 !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.books-main .hero.hero-veto .hero-action-secondary,
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+.cinema-shell .cinema-secondary{
+  color:var(--vm9-ink) !important;
+  background:var(--vm9-raised) !important;
+  border-color:var(--vm9-line) !important;
+}
+/* The chapter reader's own [data-theme=light/sepia] and its personalization
+   UI are intentionally excluded from all of these selectors. */
+
+
+/* V9 neutral embedded canvases. Preserve original media covers and readers. */
+:is(#app.app,.cinema-shell,.books-main){
+  --vm9-bg:#050505;--vm9-panel:#141414;--vm9-raised:#1e1e1e;
+  --vm9-ink:#f5f5f5;--vm9-muted:#a9a9a9;--vm9-accent:#eeeeee;
+  --vm9-line:rgba(255,255,255,.13);
+}
+#app.app :is(.sidebar,.topbar,.hero),.cinema-shell :is(.cinema-header,.cinema-hero),
+.books-main :is(.topbar,.books-hero) {
+  background:#111111 !important;background-image:none !important;
+  border-color:rgba(255,255,255,.11) !important;
+  box-shadow:none !important;
+}
+
+
+/* V9 / EMBEDDED APPEARANCE SYNC.
+ * iframe HTML has data-universe-theme owned by vetogram-media-context.js.
+ * Do not touch actual reader.paper theme, poster art or stream sources.
+ */
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"]),
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"]) body,
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"]) :is(#app.app,.cinema-shell,.books-main) {
+  background-color:#050505 !important;color:#f4f4f4 !important;
+  color-scheme:dark;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]),
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) body,
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) :is(#app.app,.cinema-shell,.books-main) {
+  background-color:#fff !important;color:#151515 !important;color-scheme:light;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) :is(#app.app,.cinema-shell,.books-main){
+  --vm9-ink:#141414;--vm9-muted:#666;--vm9-dim:#777;
+  --vm9-line:rgba(0,0,0,.14);--vm9-accent:#222;
+  --vm9-bg:#fff;--vm9-panel:#f5f5f5;--vm9-raised:#ececec;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"])
+:is(#app.app .sidebar,#app.app .topbar,#app.app .hero,.cinema-shell .cinema-header,.cinema-shell .cinema-hero,.books-main .topbar,.books-main .books-hero){
+  background:#f4f4f4 !important;background-image:none !important;
+  border-color:rgba(0,0,0,.12) !important;color:#1c1c1c !important;
+  box-shadow:none !important;
+}
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"])
+:is(#app.app .sidebar,#app.app .topbar,#app.app .hero,.cinema-shell .cinema-header,.cinema-shell .cinema-hero,.books-main .topbar,.books-main .books-hero){
+  background:#111 !important;background-image:none !important;
+  border-color:rgba(255,255,255,.13) !important;box-shadow:none !important;
+}
+
+
+/* V9 WORLD CINEMA — source-bound editorial home. No fabricated streams. */
+html.v6-embedded:not([data-universe-theme="pearl"]):not([data-universe-theme="linen"]) .cinema-shell{
+  background:#050505 !important;color:#f5f5f5 !important;
+}
+.cinema-shell #cinemaHero{
+  min-height:clamp(390px,53vw,580px) !important;
+  background:#090909 !important;background-image:none !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:none !important;
+  border-radius:23px !important;
+}
+.cinema-shell #cinemaHero .cinema-hero-bg{
+  opacity:.94 !important;background-size:cover !important;
+  background-position:center 39% !important;
+}
+.cinema-shell #cinemaHero::before{
+  background:linear-gradient(89deg,rgba(0,0,0,.95) 0%,rgba(0,0,0,.72) 43%,rgba(0,0,0,.20) 90%),
+    linear-gradient(0deg,rgba(0,0,0,.78),transparent 54%) !important;
+}
+.cinema-shell #cinemaHero .cinema-hero-copy{
+  padding:clamp(24px,5vw,57px) clamp(22px,5.5vw,66px) 78px !important;
+  max-width:750px !important;
+}
+.cinema-shell #cinemaHero h1{
+  font-size:clamp(39px,6.5vw,78px) !important;
+  line-height:1.02 !important;letter-spacing:-.055em !important;
+  font-weight:800 !important;
+}
+.cinema-shell #cinemaHero .cinema-hero-actions button{
+  min-height:44px !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries){
+  margin:29px 0 !important;
+  background:transparent !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-section-head{
+  display:flex !important;
+  align-items:end !important;justify-content:space-between !important;
+  gap:14px !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-section-head h2{
+  font-size:clamp(23px,4.6vw,34px) !important;
+  font-weight:780 !important;letter-spacing:-.04em !important;
+  line-height:1.14 !important;color:#f7f7f7 !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-section-head p{
+  font-size:12px !important;line-height:1.5 !important;
+  color:#9a9a9a !important;max-width:580px !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-rail{
+  display:flex !important;overflow-x:auto !important;
+  scroll-snap-type:x mandatory !important;
+  gap:12px !important;scrollbar-width:none;
+  padding:14px 2px 16px !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-rail .cinema-card{
+  flex:0 0 clamp(195px,24vw,282px) !important;
+  width:clamp(195px,24vw,282px) !important;
+  min-width:0 !important;
+  scroll-snap-align:start !important;
+  border:0 !important;background:transparent !important;
+  border-radius:15px !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-art{
+  aspect-ratio:16/10 !important;
+  border-radius:14px !important;
+  background:#181818 !important;background-image:none !important;
+  box-shadow:none !important;
+  border:1px solid #323232 !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-art img{
+  object-fit:cover !important;
+  width:100% !important;height:100% !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-name{
+  font-size:15px !important;line-height:1.24 !important;
+  font-weight:760 !important;letter-spacing:-.02em !important;
+  padding:10px 0 2px !important;color:#ededed !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-meta{
+  font-size:11px !important;color:#9d9d9d !important;
+}
+.cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-art-badge{
+  background:rgba(0,0,0,.72) !important;
+  border:1px solid rgba(255,255,255,.18) !important;
+  color:#eee !important;
+}
+@media(max-width:600px){
+  .cinema-shell #cinemaHero{
+    min-height:410px !important;
+    margin:9px 0 18px !important;border-radius:15px !important;
+  }
+  .cinema-shell #cinemaHero .cinema-hero-copy{
+    padding:26px 20px 70px !important;
+  }
+  .cinema-shell #cinemaHero h1{font-size:clamp(34px,9vw,48px) !important}
+  .cinema-shell #cinemaHero p{font-size:12px !important;line-height:1.5 !important}
+  .cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-rail .cinema-card{
+    flex-basis:225px !important;width:225px !important;
+  }
+  .cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-section-head p{
+    font-size:11px !important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .cinema-shell #cinemaHero .cinema-hero-bg{
+    transition:none !important;transform:none !important;
+  }
+  .cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-art{
+    transition:none !important;transform:none !important;
+  }
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .cinema-shell #cinemaHero{
+  background:#222 !important;color:#fff !important;
+}
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-section-head h2,
+html.v6-embedded:is([data-universe-theme="pearl"],[data-universe-theme="linen"]) .cinema-shell :is(#cinemaForeignShelf,#cinemaWorldSeries) .cinema-card-name{
+  color:#171717 !important;
+}
+
+/* Source-only global series get an intentional monochrome typographic cover.
+   This is not a fabricated official poster or a promise of streaming. */
+.cinema-shell .cinema-world-series-art{
+  position:relative !important;
+  background:
+    repeating-linear-gradient(140deg,rgba(255,255,255,.026) 0 1px,transparent 1px 19px),
+    radial-gradient(ellipse at 80% 0%,#383838,#101010 66%) !important;
+  border:1px solid #3a3a3a !important;
+}
+.cinema-shell .cinema-world-series-art::before{
+  content:"V / SERIES" !important;
+  position:absolute !important;top:46% !important;right:13px !important;
+  left:auto !important;width:auto !important;height:auto !important;
+  font-size:clamp(25px,4vw,50px) !important;
+  font-weight:900 !important;letter-spacing:-.08em !important;
+  color:rgba(255,255,255,.065) !important;
+  background:none !important;transform:translateY(-50%) rotate(-8deg) !important;
+  pointer-events:none !important;
+}
+.cinema-shell .cinema-world-series-art .cinema-card-art-title{
+  z-index:4 !important;
+  left:15px !important;right:14px !important;bottom:17px !important;
+  font-size:clamp(21px,2.6vw,29px) !important;
+  font-weight:820 !important;letter-spacing:-.045em !important;
+  line-height:1.04 !important;-webkit-line-clamp:3 !important;
+  text-shadow:0 3px 20px #000 !important;
+}
+.cinema-shell .cinema-world-series-art .cinema-card-art-badge{
+  font-size:9px !important;letter-spacing:.09em !important;
+  max-width:calc(100% - 22px) !important;
+}
+.cinema-shell #cinemaSeriesPopularRail{
+  display:flex !important;overflow-x:auto !important;
+  gap:13px !important;scroll-snap-type:x proximity !important;
+}
+.cinema-shell #cinemaSeriesPopularRail .cinema-card{
+  flex:0 0 clamp(200px,25vw,270px) !important;
+  width:clamp(200px,25vw,270px) !important;
+  scroll-snap-align:start !important;
+}
+.cinema-shell #cinemaSeriesPopularRail .cinema-card-art{
+  aspect-ratio:16/10 !important;
+}
+@media(prefers-reduced-motion:reduce){
+  .cinema-shell .cinema-world-series-art::before{
+    transition:none !important;
+  }
+}

@@ -8,13 +8,28 @@
   const LIBRARY_KEY="vetogram.cinema.library.v1:"+(window.VetogramMediaContext?.scope||"device");
   const FILM_KEY="film";
   const fallback={favorites:[],progress:{},history:[]};
-  const state={tab:"home",genre:"Все",seriesGenre:"Все",query:"",sort:"recent",visible:100,showUnverified:false,foreignIncludeUnverified:false,selected:null,playing:null,request:0,
+  const state={tab:"home",genre:"Все",seriesGenre:"Все",query:"",sort:"year",visible:100,onlyPlayable:false,showUnverified:false,foreignIncludeUnverified:true,selected:null,playing:null,request:0,
     library:loadLibrary(),sources:new Map(),posters:new Map(),posterLookups:new Set(),approvedProviders:new Map(),activePlayerSource:null,subtitleBlob:null,pendingTime:0,embedHandle:null,embedDuration:0,embedLastSave:0};
   const video=$("cinemaVideo");
   let toastTimer=0,progressTimer=0,catalogTicket=0,catalogNextOffset=null,catalogDebounce=0,providerFeedbackTimer=0;
+  let catalogController=null; // One active catalog request per app.
   // Fail-closed on provider-reported playback errors for this device session.
   // A timeout is not proof of unavailability (the user may not press ▶).
   const failedEmbeds=new Set();
+  // Prevent repeated downloads of broken posters when a shelf is rerendered.
+  const failedPosterUrls=new Set();
+  const posterQueue=[];
+  let posterActive=0;
+  const MAX_POSTER_REQUESTS=3;
+  const posterRetryAt=new Map();
+  const posterObserver=typeof IntersectionObserver==="function"?new IntersectionObserver(entries=>{
+    for(const entry of entries){
+      if(!entry.isIntersecting)continue;
+      posterObserver.unobserve(entry.target);
+      const film=filmById(entry.target.dataset.filmId);
+      if(film)requestPoster(film);
+    }
+  },{rootMargin:"240px 0px"}):null;
   const studio={selected:"mosfilm",ticket:0,loading:false,nextPage:1,results:new Map(),loaded:new Set(),pages:new Map(),firstPages:new Set()};
   const STUDIO_LINKS={mosfilm:"https://rutube.ru/channel/25963146/",lenfilm:"https://rutube.ru/channel/1792500/",gorky:"https://rutube.ru/channel/48160110/",starmedia:"https://rutube.ru/channel/141565/",marsmedia:"https://rutube.ru/channel/29207414/",soyuzmultfilm:"https://rutube.ru/u/soyuzmultfilm/",rossiya1:"https://rutube.ru/channel/24620967/",centralpartnership:"https://rutube.ru/channel/798788/"};
   // The initial 200 feature films appear instantly in their studio tabs.
@@ -72,21 +87,41 @@
   }
   function setTab(tab){
     if(!["home","foreign","catalog","series","search","library"].includes(tab))return;
-    if(tab==="foreign")tab="catalog"; // no external-only streaming catalog
-    buzz();state.tab=tab;state.genre="Все";state.visible=100;if(tab!=="search"){state.query="";$("cinemaSearch").value=""}
+    buzz();state.tab=tab;state.genre="Все";state.visible=100;
+    if(["home","foreign"].includes(tab)){
+      state.onlyPlayable=false;
+      const checkbox=$("cinemaPlayableOnly");
+      if(checkbox)checkbox.checked=false;
+    }
+    if(tab!=="search"){state.query="";$("cinemaSearch").value=""}
+    clearTimeout(catalogDebounce);
+    if(["foreign","series","library"].includes(tab)){
+      ++catalogTicket;catalogController?.abort();catalogController=null;
+      $("cinemaLoadMore").disabled=false;
+      $("cinemaLoadMore").textContent="Загрузить ещё фильмы ↓";
+    }
     document.querySelectorAll("[data-tab]").forEach(b=>{
       const yes=b.dataset.tab===tab;b.classList.toggle("active",yes);
       if(b.classList.contains("cinema-tab")){if(yes)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")}
     });
     $("cinemaHero").classList.toggle("hidden",tab!=="home");
+    if(tab==="foreign")$("cinemaForeignIncludeUnverified").checked=state.foreignIncludeUnverified;
     if(tab==="series")$("cinemaSearch").placeholder="Найти сериал по названию…";
     else if(tab==="foreign")$("cinemaSearch").placeholder="Найти зарубежный фильм с русской озвучкой…";
     else $("cinemaSearch").placeholder="Найти фильм, сериал, актёра или жанр…";
     $("cinemaSearchArea").classList.toggle("hidden",tab==="library");
-    $("cinemaStudios").classList.toggle("hidden",tab!=="home"&&tab!=="catalog");
+    const playableToggle=$("cinemaPlayableOnly");
+    if(playableToggle){
+      if(["series","library"].includes(tab)){
+        state.onlyPlayable=false;
+        playableToggle.checked=false;
+      }
+      if(playableToggle.parentElement)playableToggle.parentElement.hidden=["series","library"].includes(tab);
+    }
+    $("cinemaStudios").classList.toggle("hidden",tab!=="catalog");
     $("cinemaSeriesHub").classList.toggle("hidden",tab!=="series");
-    $("cinemaForeignHub").classList.add("hidden");
-    for(const id of ["cinemaLatest","cinemaGenresSection","cinemaSeries","cinemaAnimations","cinemaRussian","cinemaFranchises","cinemaForeignShelf"])
+    $("cinemaForeignHub").classList.toggle("hidden",tab!=="foreign");
+    for(const id of ["cinemaLatest","cinemaGenresSection","cinemaSeries","cinemaAnimations","cinemaRussian","cinemaFranchises","cinemaForeignShelf","cinemaWorldSeries"])
       $(id).classList.toggle("hidden",tab!=="home");
     if(tab==="home")setHeroSlide(discovery.index);
     render();
@@ -97,12 +132,15 @@
   // Backend is optional until the VPS is deployed. Initial curated films remain usable.
   async function fetchCatalog(reset=true) {
     const offset=reset?0:catalogNextOffset;
-    if(offset===null||state.tab==="library")return;
+    if(offset===null||["library","series","foreign"].includes(state.tab))return;
     const ticket=++catalogTicket;
+    catalogController?.abort();
     const query=state.query.trim();
     const genre=state.genre==="Все"?"":state.genre;
     const params=new URLSearchParams({limit:"80",offset:String(offset),q:query,genre});
-    const timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(),4500);
+    const timeout=new AbortController();
+    catalogController=timeout;
+    const timer=setTimeout(()=>timeout.abort(),4500);
     const button=$("cinemaLoadMore");
     button.disabled=true;
     if(!reset)button.textContent="Загружаем…";
@@ -129,7 +167,9 @@
       if(ticket===catalogTicket&&reset)catalogNextOffset=null;
       // Do not interrupt the initial offline/curated catalogue.
     }finally{
-      clearTimeout(timer);button.disabled=false;button.textContent="Загрузить ещё фильмы ↓";
+      clearTimeout(timer);
+      if(catalogController===timeout)catalogController=null;
+      if(ticket===catalogTicket){button.disabled=false;button.textContent="Загрузить ещё фильмы ↓";}
     }
   }
 
@@ -353,18 +393,30 @@
   function selectedFilms(){
     // User requested a playback-only library. External-only discovery and
     // titles without a validated provider stream stay out of public shelves.
-    let list=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
-      !failedEmbeds.has(f.id)&&(f.player?.licensed===true||Boolean(f.file)));
-    if(state.tab==="foreign")list=list.filter(f=>f.externalRutube&&(state.foreignIncludeUnverified||f.audioClaim||f.featuredForeign));
+    // Discovery-only records have a separate, clearly labelled foreign catalog.
+    // They are never passed into the in-app video player.
+    const worldBrowse=state.tab==="home";
+    const worldHome=worldBrowse&&!state.query.trim();
+    let list=worldBrowse||state.tab==="search"
+      ? films.filter(f=>((worldHome?isWorldSpotlight(f):f.externalRutube))||
+        (f.seriesPopular&&f.seriesGroup==="global")||
+        (f.player?.licensed===true&&!f.discoveryOnly&&!f.externalRutube&&
+          (state.tab==="search"||(f.genres||[]).includes("Зарубежное"))))
+      : state.tab==="foreign"
+      ? films.filter(f=>f.externalRutube&&(state.foreignIncludeUnverified||f.audioClaim))
+      : films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
+        !failedEmbeds.has(f.id)&&(f.player?.licensed===true||Boolean(f.file)));
     if(state.tab==="series")list=list.filter(f=>f.contentType==="Сериалы"&&f.player?.licensed===true);
     if(state.tab==="catalog")list=list.filter(f=>f.contentType!=="Сериалы"&&!f.externalRutube);
     if(state.tab==="library")list=films.filter(f=>state.library.favorites.includes(f.id)&&
       !f.externalRutube&&!f.discoveryOnly&&!failedEmbeds.has(f.id)&&
       (f.player?.licensed===true||Boolean(f.file)));
+    if(state.onlyPlayable)list=list.filter(f=>movieAccess(f).kind==="embedded");
     if(state.genre!=="Все")list=list.filter(f=>(f.genres||[]).includes(state.genre)||
       (state.genre==="Фильмы"&&!f.contentType&&Number(f.minutes)>30));
     const q=state.query.trim().toLocaleLowerCase("ru-RU");
     if(q)list=list.filter(f=>(f.title+" "+(f.original||"")+" "+(f.year||"")+" "+(f.creator||"")+" "+(f.genres||[]).join(" ")).toLocaleLowerCase("ru-RU").includes(q));
+    if(worldHome)return [...list].sort((a,b)=>worldPriority(a)-worldPriority(b)||((Number(b.year)||0)-(Number(a.year)||0)));
     if(state.sort==="year")
       return [...list].sort((a,b)=>(Number(b.year)||0)-(Number(a.year)||0)||(uploadTime(b)-uploadTime(a)));
     if(state.sort==="title")
@@ -374,19 +426,57 @@
   function artElement(f,wide){
     const div=node("div",wide?"cinema-card-art cinema-card-art-wide":"cinema-card-art");
     div.style.setProperty("--film-hue",String(f.hue));
-    const badge=node("span","cinema-card-art-badge");badge.textContent=f.externalRutube?(f.audioClaim?"ЗАЯВЛЕН ДУБЛЯЖ":"ОЗВУЧКА НЕ ПРОВЕРЕНА"):f.discoveryOnly?(f.russianAudioStatus==="catalog-listed"?"РУССКАЯ ДОРОЖКА В КАТАЛОГЕ":"ОЗВУЧКА НЕ ПОДТВЕРЖДЕНА"):f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":f.player?"СМОТРЕТЬ":"ОТКРЫТЫЙ ФИЛЬМ";div.append(badge);
-    const title=node("span","cinema-card-art-title");title.textContent=f.title;div.append(title);
-    const poster=state.posters.get(f.id)||f.poster;
-    if(poster){const img=node("img");img.loading="lazy";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{img.remove();state.posters.delete(f.id)};div.prepend(img)}
-    else if(!f.discoveryOnly)requestPoster(f);
+    div.dataset.filmId=String(f.id);
+    if(f.seriesPopular&&f.seriesGroup==="global")div.classList.add("cinema-world-series-art");
+    const badge=node("span","cinema-card-art-badge");badge.textContent=f.seriesPopular&&f.seriesGroup==="global"?"МИРОВОЙ СЕРИАЛ · ИСТОЧНИК":f.externalRutube?(f.audioClaim?"ЗАЯВЛЕН ДУБЛЯЖ":"ОЗВУЧКА НЕ ПРОВЕРЕНА"):f.discoveryOnly?(f.russianAudioStatus==="catalog-listed"?"РУССКАЯ ДОРОЖКА В КАТАЛОГЕ":"ОЗВУЧКА НЕ ПОДТВЕРЖДЕНА"):f.contentType==="Мультфильмы"?"АНИМАЦИЯ":f.contentType==="Сериалы"?"СЕРИАЛ":movieAccess(f).kind==="embedded"?"В ПЛЕЕРЕ":movieAccess(f).kind==="archive"?"АРХИВ":"ОПИСАНИЕ";div.append(badge);
+    const title=node("span","cinema-card-art-title");title.textContent=displayFilmTitle(f);div.append(title);
+    const poster=[state.posters.get(f.id),f.poster].find(url=>url&&!failedPosterUrls.has(url));
+    if(poster){const img=node("img");img.loading="lazy";img.decoding="async";img.src=poster;img.alt="Кадр из фильма «"+f.title+"»";img.onerror=()=>{failedPosterUrls.add(poster);img.remove();if(state.posters.get(f.id)===poster)state.posters.delete(f.id)};div.prepend(img)}
+    else if(!f.discoveryOnly){if(posterObserver)posterObserver.observe(div);else requestPoster(f)}
     return div;
   }
+  // Original video titles can contain SEO descriptions from the uploader.
+  // Keep the raw source title intact for attribution/search, but not the UI.
+  function displayFilmTitle(f){
+    const original=String(f?.title||'Кино');
+    const cleaned=original
+      .replace(/\s+(?:Смотреть(?:\s+онлайн)?|Смотреть\s+в\s+хорошем\s+качестве)(?:\s+в\s+хорошем\s+качестве)?\b.*$/i,'')
+      .replace(/\s*\|\s*(?:Мосфильм|Mosfilm)(?:\s+4K)?.*$/i,'')
+      .replace(/\s*\|\s*(?:сериал|мелодрама|драма|фильм)(?:\b.*)?$/i,'')
+      .trim();
+    return cleaned||original;
+  }
+  // V9.7: honest, per-item availability. A catalog entry or poster is not
+  // a playback entitlement, and remote playback is never guaranteed.
+  function movieAccess(f){
+    if(f.externalRutube)return {kind:"external",label:"↗ У источника",
+      explanation:"Сторонняя публикация RUTUBE. Права на просмотр внутри Vetogram не подтверждены; язык и доступность проверяются у источника."};
+    if(f.discoveryOnly)return f.watchAvailability==="unavailable"
+      ?{kind:"unavailable",label:"Недоступно у источника",
+        explanation:"В указанном каталоге просмотр сейчас недоступен. Vetogram не содержит видеокопию этой картины."}
+      :{kind:"external",label:"↗ Проверить сервис",
+        explanation:"Это карточка фильма в каталоге, а не доступный для просмотра файл. Проверь права, регион и подписку у указанного сервиса."};
+    if(failedEmbeds.has(f.id))return {kind:"unavailable",label:"Ошибка источника",
+      explanation:"В текущей сессии видеоплеер сообщил об ошибке. Повтори попытку позже или проверь оригинальную страницу источника."};
+    if(f.player?.licensed===true&&approvedSources(f).length>0)
+      return {kind:"embedded",label:"▶ Встроенный плеер",
+        explanation:"Для этой публикации указан разрешённый источник встраивания. Фактическое воспроизведение зависит от региона и доступности провайдера."};
+    if(f.file)return {kind:"archive",label:"▶ Проверить архив",
+      explanation:"Видео запрашивается из Wikimedia Commons при открытии. Формат и доступность файла проверяются во время загрузки."};
+    return {kind:"unavailable",label:"Нет подтверждённого плеера",
+      explanation:"Встроенный просмотр не подтверждён; доступна информация о произведении и ссылка на источник."};
+  }
   function filmCard(f){
-    const b=node("button","cinema-card");b.type="button";b.setAttribute("aria-label",f.title+", детали");
+    const b=node("button","cinema-card");b.type="button";b.dataset.filmId=String(f.id);b.setAttribute("aria-label",displayFilmTitle(f)+", детали");
     b.append(artElement(f,false));
-    const name=node("span","cinema-card-name");name.textContent=f.title;
-    const meta=node("small","cinema-card-meta");meta.textContent=[f.year||"Русский",f.minutes?f.minutes+" мин":null,f.externalRutube?(f.audioClaim?"Дубляж заявлен":"Проверь озвучку"):f.discoveryOnly?(f.watchAvailability==="unavailable"?"Нет доступа у источника":f.russianAudio?"Русская дорожка указана":"Язык неизвестен"):f.contentType||f.genres?.[0]].filter(Boolean).join(" · ");
+    const name=node("span","cinema-card-name");name.textContent=displayFilmTitle(f);
+    const meta=node("small","cinema-card-meta");meta.textContent=[f.year||null,f.minutes?f.minutes+" мин":null,f.externalRutube?(f.audioClaim?"Дубляж заявлен":"Проверь озвучку"):f.discoveryOnly?(f.watchAvailability==="unavailable"?"Нет доступа у источника":f.russianAudio?"Русская дорожка указана":"Язык неизвестен"):f.contentType||f.genres?.[0]].filter(Boolean).join(" · ");
     b.append(name,meta);
+    const access=movieAccess(f);
+    const availability=node("span","v97-cinema-access v97-cinema-access-"+access.kind);
+    availability.textContent=access.label;
+    b.append(availability);
+    b.dataset.access=access.kind;
     const p=state.library.progress[f.id];
     if(p&&p.d>0&&p.t/p.d<.96){const bar=node("div","cinema-card-progress"),line=node("i");line.style.width=Math.round(100*p.t/p.d)+"%";bar.append(line);b.append(bar)}
     b.addEventListener("click",()=>openDetails(f));
@@ -406,10 +496,12 @@
     const image=state.posters.get(f.id)||f.poster;
     $("cinemaHeroBackdrop").style.backgroundImage=image?'url("'+String(image).replace(/"/g,"%22")+'")':"none";
     text("cinemaHeroEyebrow",f.externalRutube?"ЗАРУБЕЖНОЕ · НАЙДЕНО НА RUTUBE":f.publishedAt?"ДОБАВЛЕНО В КИНОТЕКУ · "+(f.creator||"КИНО"): "ИЗБРАННОЕ · "+(f.creator||"КИНО"));
-    text("cinemaHeroTitle",f.title.length>85?f.title.slice(0,82)+"…":f.title);
+    text("cinemaHeroTitle",displayFilmTitle(f).length>85?displayFilmTitle(f).slice(0,82)+"…":displayFilmTitle(f));
     text("cinemaHeroDescription",f.synopsis?.slice(0,195)||"Смотрите историю в официальном видеоплеере.");
-    text("cinemaHeroMeta",f.externalRutube?[f.year,f.minutes?f.minutes+" МИН":null,f.audioClaim?"ДУБЛЯЖ ЗАЯВЛЕН":"ОЗВУЧКА НЕ ПРОВЕРЕНА"].filter(Boolean).join(" · "):[f.year||"Кино",f.minutes?f.minutes+" МИН":null,f.contentType||f.genres?.[0],"РУССКАЯ ДОРОЖКА"].filter(Boolean).join(" · "));
-    text("cinemaHeroWatch",f.externalRutube?"↗ Открыть видео":"▶ Смотреть фильм");
+    text("cinemaHeroMeta",f.externalRutube?[f.year,f.minutes?f.minutes+" МИН":null,f.audioClaim?"ДУБЛЯЖ ЗАЯВЛЕН":"ОЗВУЧКА НЕ ПРОВЕРЕНА"].filter(Boolean).join(" · "):[f.year||"Кино",f.minutes?f.minutes+" МИН":null,f.contentType||f.genres?.[0],f.russianAudio===true?"РУССКАЯ ДОРОЖКА ЗАЯВЛЕНА":"ЯЗЫК У ИСТОЧНИКА"].filter(Boolean).join(" · "));
+    const licensedHere=movieAccess(f).kind==="embedded";
+    text("cinemaHeroWatch",licensedHere?"▶ Смотреть":"Подробнее и источники");
+    $("cinemaHeroWatch").setAttribute("aria-label",licensedHere?"Смотреть "+f.title:"Информация и источники: "+f.title);
     text("cinemaHeroCounter",String(discovery.index+1).padStart(2,"0")+" / "+String(length).padStart(2,"0"));
     $("cinemaHeroDots").replaceChildren(...discovery.slides.map((film,i)=>{
       const b=node("button","cinema-hero-dot");b.type="button";
@@ -419,25 +511,64 @@
     }));
     if(!image)requestPoster(f);
   }
+  // V9: lead with globally known non-Russian films and series from the
+  // already sourced discovery catalog. This does NOT grant streaming rights.
+  // Explicit editorial curation: recognisable foreign titles on Home,
+  // not the entire unverified RUTUBE feed. Metadata never grants playback.
+  const V9_WORLD_SPOTLIGHT=Object.freeze([
+    "rutube-foreign-32257e72dcaa84e923d963f0312dac3d",
+    "rutube-foreign-9fc5a978eac757289f02ac7297abc723",
+    "rutube-foreign-63a01e97f8a311c37ea482bdcfc54ca4",
+    "rutube-foreign-3e74288e50b89b28f2e7302b4605556d",
+    "rutube-foreign-69f6d0d92cfa82e609ee5fc4906d8ed0",
+    "rutube-foreign-ef554e95494f715e14ed6a1dcfa487bd",
+    "rutube-foreign-bef521bfb6509e2c42af295b39f2d3b2",
+    "rutube-foreign-7e943b4c4fc73c70d48a770e2f02e740",
+    "rutube-foreign-2a51feb5e9406bcf2a5fdf2d4c460407",
+    "rutube-foreign-434660bdbfbfc938e80c33bbfeb5d59e",
+    "rutube-foreign-dc98d9aa982767bfa278834f60d47630",
+    "rutube-foreign-288ea6608b8e97980b57f852e82612b8",
+    "rutube-foreign-91dbbdd492e35537c17875dd1850839d"
+  ]);
+  const V9_WORLD_SPOTLIGHT_SET=new Set(V9_WORLD_SPOTLIGHT);
+  const isWorldSpotlight=f=>Boolean(f.externalRutube&&
+    (f.featuredForeign||V9_WORLD_SPOTLIGHT_SET.has(f.id)));
+  const V9_WORLD_PRIORITY=["iron man","harry potter","avengers: endgame","game of thrones",
+    "wednesday","squid game","house of the dragon","the dark knight","inception"];
+  function worldPriority(f){
+    const curated=V9_WORLD_SPOTLIGHT.indexOf(f.id);
+    if(curated>=0)return curated;
+    const key=String(f.original||f.title||"").toLocaleLowerCase("en");
+    const rank=V9_WORLD_PRIORITY.findIndex(name=>key.includes(name));
+    return rank<0?100:rank+V9_WORLD_SPOTLIGHT.length;
+  }
   function updateHeroDeck(){
-    const foreign=[]; // Unlicensed external links must never lead a Play hero.
-    const recents=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
-      !f.discoveryOnly&&!f.externalRutube&&f.contentType!=="Сериалы"&&Number(f.minutes)>=35)
-      .sort((a,b)=>uploadTime(b)-uploadTime(a));
-    // Lead with films which actually have an in-app player. The foreign
-    // discovery cards may only have an external source URL.
-    const all=[...recents,...films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
-      !f.discoveryOnly&&!f.externalRutube&&Number(f.minutes)>=40)];
+    const world=films.filter(f=>isWorldSpotlight(f)&&
+      typeof f.poster==="string"&&/^https:\/\//.test(f.poster))
+      .sort((a,b)=>worldPriority(a)-worldPriority(b)||((Number(b.year)||0)-(Number(a.year)||0)));
+    const worldSeries=films.filter(f=>f.seriesPopular&&f.seriesGroup==="global"&&
+      typeof f.poster==="string"&&/^https:\/\//.test(f.poster))
+      .sort((a,b)=>worldPriority(a)-worldPriority(b));
+    // Only licensed, rights-verified foreign streams qualify for play here.
+    const verifiedForeign=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
+      !f.discoveryOnly&&!f.externalRutube&&
+      (f.genres||[]).includes("Зарубежное"));
+    const all=[...world,...worldSeries,...verifiedForeign];
     const used=new Set(),deck=[];
-    for(const film of all) {
-      if(used.has(film.id))continue;
-      used.add(film.id);deck.push(film);
+    for(const film of all){
+      const key=String(f.original||f.title||f.id).toLocaleLowerCase("ru");
+      if(used.has(key))continue;
+      used.add(key);deck.push(film);
       if(deck.length===6)break;
     }
-    const key=deck.map(x=>x.id).join("|");
-    if(key===discovery.lastKey)return;
+    // Zero Hollywood footage/posters is a valid state, not permission to
+    // silently fill the primary hero with Russian catalog content.
     const oldId=discovery.slides[discovery.index]?.id;
+    const key=deck.map(x=>x.id).join("|");
+    if(key===discovery.lastKey){$("cinemaHero").classList.toggle("hidden",!isHome()||!deck.length);return;}
     discovery.lastKey=key;discovery.slides=deck;
+    if(!deck.length){$("cinemaHero").classList.add("hidden");return;}
+    $("cinemaHero").classList.toggle("hidden",!isHome());
     const prior=deck.findIndex(x=>x.id===oldId);
     setHeroSlide(prior>=0?prior:0);
   }
@@ -538,25 +669,21 @@
     }));
   }
   function renderPopularSeries(){
+    const section=document.querySelector(".cinema-series-popular");
     const rail=$("cinemaSeriesPopularRail");
-    const list=(window.VetogramCinemaPopularSeries||[]).filter(x=>x.seriesGroup==="global");
-    rail.replaceChildren(...list.map(item=>{
-      // Text-only editorial identity: no false cinema player and no borrowed poster licensing.
-      const card=node("article","cinema-popular-show");
-      card.style.setProperty("--film-hue",String(item.hue||210));
-      const artwork=node("div","cinema-popular-show-art");
-      const badge=node("small","cinema-popular-show-badge");badge.textContent="ВСТРОЕННЫЙ ПЛЕЕР НЕ ПОДКЛЮЧЁН";
-      const label=node("strong","cinema-popular-show-name");label.textContent=item.title;
-      artwork.append(badge,label);
-      const desc=node("span","cinema-popular-show-info");
-      desc.textContent=item.year+" · русская дорожка указана в каталоге";
-      card.append(artwork,desc);
-      return card;
-    }));
+    const q=state.query.trim().toLocaleLowerCase("ru");
+    const list=films.filter(f=>f.seriesPopular&&f.seriesGroup==="global"&&
+      (!q||(f.title+" "+(f.original||"")).toLocaleLowerCase("ru").includes(q)))
+      .sort((a,b)=>worldPriority(a)-worldPriority(b));
+    const visible=state.tab==="series"&&list.length>0;
+    section.classList.toggle("hidden",!visible);
+    section.setAttribute("aria-hidden",String(!visible));
+    if(visible)rail.replaceChildren(...list.map(filmCard));
   }
   function renderSeriesCollections(){
     const groups=groupedSeries();
     $("cinemaSeriesHub").classList.toggle("hidden",state.tab!=="series");
+    renderPopularSeries();
     if(state.tab==="series"){
       // Categories derive exclusively from real playable studio episodes.
       const genres=["Все",...new Set(groups.flatMap(group=>group.flatMap(f=>f.genres||[])))];
@@ -579,12 +706,17 @@
   }
   function refreshDiscovery(){
     const home=isHome();
-    // Hiding discovery-only foreign uploads: no permission to embed them.
-    $("cinemaForeignShelf").classList.add("hidden");
-    const external=films.filter(f=>f.externalRutube);
+    // Discovery cards are browse-only; missing rights never become a Play button.
+    const external=films.filter(f=>isWorldSpotlight(f))
+      .sort((a,b)=>worldPriority(a)-worldPriority(b));
+    $("cinemaForeignShelf").classList.toggle("hidden",!home||external.length===0);
     if(home)$("cinemaForeignRail").replaceChildren(...external.slice(0,20).map(filmCard));
+    const globalSeries=films.filter(f=>f.seriesPopular&&f.seriesGroup==="global").sort((a,b)=>worldPriority(a)-worldPriority(b));
+    $("cinemaWorldSeries").classList.toggle("hidden",!home||globalSeries.length===0);
+    if(home)$("cinemaWorldSeriesRail").replaceChildren(...globalSeries.slice(0,20).map(filmCard));
     text("cinemaForeignNote",external.filter(f=>f.audioClaim).length+" публикаций с заявленным дубляжом · "+external.length+" найденных публикаций. Право на их встраивание не установлено.");
     renderSeriesCollections();
+    const catalog=state.tab==="catalog"&&!state.query.trim();
     const recent=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
       !f.discoveryOnly&&!f.externalRutube&&uploadTime(f)>0)
       .sort((a,b)=>uploadTime(b)-uploadTime(a));
@@ -598,10 +730,10 @@
       ["cinemaAnimations","cinemaAnimationsRail",cartoons]
     ];
     for(const [sectionId,railId,rows] of shelves){
-      $(sectionId).classList.toggle("hidden",!home||rows.length===0);
-      if(home&&rows.length)$(railId).replaceChildren(...rows.slice(0,18).map(sectionId==="cinemaSeries"?seriesShowCard:filmCard));
+      $(sectionId).classList.toggle("hidden",!catalog||rows.length===0);
+      if(catalog&&rows.length)$(railId).replaceChildren(...rows.slice(0,18).map(sectionId==="cinemaSeries"?seriesShowCard:filmCard));
     }
-    $("cinemaGenresSection").classList.toggle("hidden",!home);
+    $("cinemaGenresSection").classList.toggle("hidden",!catalog);
     $("cinemaFranchises").classList.add("hidden");
     // Franchise title metadata is not playable: never render fake Watch cards.
     if(home){
@@ -609,6 +741,24 @@
         const button=node("button","cinema-genre-tile");
         button.type="button";button.style.setProperty("--tile-hue",String(hue));
         button.dataset.glyph=glyph;
+        // Show authentic artwork from an existing catalog film when one is
+        // available. Never invent a poster or fetch unrelated stock imagery.
+        const matchesGenre=f=>label==="Сериалы"?f.contentType==="Сериалы":
+          label==="Мультфильмы"?f.contentType==="Мультфильмы":
+          label==="Фильмы"?f.contentType!=="Сериалы"&&f.contentType!=="Мультфильмы":
+          Array.isArray(f.genres)&&f.genres.includes(label);
+        const representative=films.find(f=>matchesGenre(f)&&
+          [state.posters.get(f.id),f.poster].some(url=>typeof url==='string'&&/^https:\/\//i.test(url)));
+        if(representative){
+          const src=[state.posters.get(representative.id),representative.poster]
+            .find(url=>typeof url==='string'&&/^https:\/\//i.test(url)&&!failedPosterUrls.has(url));
+          if(src){
+            const img=node("img","v80-genre-image");
+            img.loading="lazy";img.decoding="async";img.alt="";
+            img.src=src;img.onerror=()=>{failedPosterUrls.add(src);img.remove()};
+            button.append(img);
+          }
+        }
         const small=node("small");small.textContent="ОТКРЫТЬ";
         const strong=node("strong");strong.textContent=label;
         button.append(small,strong);
@@ -636,7 +786,7 @@
           Number(f.minutes)>=35;
       }catch{return false}
     }).sort((a,b)=>uploadTime(b)-uploadTime(a));
-    section.classList.toggle("hidden",state.tab!=="home"||Boolean(state.query.trim())||!live.length);
+    section.classList.toggle("hidden",state.tab!=="catalog"||Boolean(state.query.trim())||!live.length);
     if(section.classList.contains("hidden"))return;
     const unique=new Set(),choices=[];
     for(const movie of live){
@@ -665,16 +815,17 @@
     renderWatchNow();
     $("cinemaBrowse").classList.toggle("hidden",state.tab==="series");
     $("cinemaGrid").replaceChildren(...list.slice(0,state.visible).map(filmCard));
-    $("cinemaMoreResults").classList.toggle("hidden",list.length<=state.visible||state.tab==="library");
-    $("cinemaMoreStudios").classList.toggle("hidden",state.tab==="library"||state.tab==="series");
+    $("cinemaMoreResults").classList.toggle("hidden",list.length<=state.visible||state.tab==="library"||state.tab==="series");
+    $("cinemaMoreStudios").classList.toggle("hidden",state.tab!=="catalog");
     $("cinemaEmpty").classList.toggle("hidden",list.length>0);
     const actuallyPlayable=films.filter(f=>!f.externalRutube&&!f.discoveryOnly&&
       (f.player?.licensed===true||Boolean(f.file))).length;
-    text("cinemaCount",list.length+" из "+actuallyPlayable+" видео с источниками просмотра");
-    $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library");
+    const countPrefix=state.onlyPlayable?"Только встроенный плеер · ":"";
+    text("cinemaCount",state.onlyPlayable?list.length+" записей со встроенным плеером":countPrefix+(state.tab==="home"?(state.query.trim()?list.length+" результатов в зарубежном каталоге":list.length+" зарубежных фильмов и сериалов · доступность зависит от источника"):state.tab==="foreign" ? list.length+" найденных публикаций · дубляж и права не подтверждены" : list.length+" из "+actuallyPlayable+" видео с источниками просмотра"));
+    $("cinemaLoadMore").classList.toggle("hidden",catalogNextOffset===null||state.tab==="library"||state.tab==="foreign"||state.tab==="series"||state.tab==="home");
     const russian=films.filter(f=>f.player?.licensed===true&&!failedEmbeds.has(f.id)&&
       !f.discoveryOnly&&!f.externalRutube&&(f.spoken==="Русский"||f.spoken==="ru"));
-    const showRussian=state.tab==="home"&&!state.query.trim()&&russian.length>0;
+    const showRussian=state.tab==="catalog"&&!state.query.trim()&&russian.length>0;
     $("cinemaRussian").classList.toggle("hidden",!showRussian);
     if(showRussian)$("cinemaRussianRail").replaceChildren(...russian.slice(0,15).map(filmCard));
     const genres=["Все",...new Set(["Фильмы","Сериалы","Мультфильмы",...films.flatMap(f=>f.genres||[])])];
@@ -684,8 +835,9 @@
       b.addEventListener("click",()=>{state.genre=g;state.visible=100;buzz();render();if(state.tab!=="library")fetchCatalog(true)});return b;
     }));
     let title=state.genre==="Все"?"Вся коллекция":state.genre,subtitle="Фильмы, сериалы и мультфильмы из официальных видеоканалов. Новые записи появляются в каталоге.";
+    if(state.tab==="home"){title=state.query.trim()?"Поиск по мировому кино":"Мировое кино и сериалы";subtitle="Популярные зарубежные истории. Карточки с источником не означают право на просмотр внутри Vetogram.";}
     if(state.tab==="catalog")title="Каталог фильмов";
-    if(state.tab==="foreign"){title="Зарубежное с русским дубляжом";subtitle="Найденные на RUTUBE публикации. Озвучка указана загрузчиком; исходное видео открывается на RUTUBE.";}
+    if(state.tab==="foreign"){title="Зарубежное · каталог источников";subtitle="Дубляж указан загрузчиком и не проверен. Встроенное воспроизведение откроем только для разрешённых источников.";}
     if(state.tab==="series"){title="Серии для просмотра";subtitle="Публикации официальных каналов со встроенными плеерами. Доступность конкретного видео зависит от источника и региона.";}
     if(state.tab==="search")title="Результаты поиска";
     if(state.tab==="library"){title="Моё избранное";subtitle="Сохраняется на этом устройстве."}
@@ -701,35 +853,49 @@
     refreshDiscovery();
   }
   function requestPoster(f){
-    if(state.posters.has(f.id)||state.posterLookups.has(f.id))return;
+    if(state.posters.has(f.id)||state.posterLookups.has(f.id)||Date.now()<(posterRetryAt.get(f.id)||0))return;
     state.posterLookups.add(f.id);
-    const req=()=>Promise.resolve()
+    posterQueue.push(()=>Promise.resolve()
       .then(()=>f.player
         ?(window.VetogramCinemaArtwork?.load(f)||null)
         :getCommons(f).then(result=>result.poster))
       .then(poster=>{
-        if(!poster)return;
+        if(!poster||failedPosterUrls.has(poster))return;
         state.posters.set(f.id,poster);
+        posterRetryAt.delete(f.id);
         document.querySelectorAll(".cinema-card").forEach(card=>{
-          if(card.querySelector(".cinema-card-name")?.textContent!==f.title)return;
+          if(card.dataset.filmId!==String(f.id))return;
           const art=card.querySelector(".cinema-card-art");
           if(art&&!art.querySelector("img")){
             const img=node("img");img.loading="lazy";img.alt="Кадр: "+f.title;
-            img.src=poster;img.onerror=()=>img.remove();art.prepend(img);
+            img.src=poster;img.onerror=()=>{failedPosterUrls.add(poster);if(state.posters.get(f.id)===poster)state.posters.delete(f.id);img.remove()};art.prepend(img);
           }
         });
         if(state.selected?.id===f.id){
           const art=$("cinemaDetailsArt");
           if(!art.querySelector("img")){
             const img=node("img");img.alt="Кадр из фильма "+f.title;img.src=poster;
-            img.onerror=()=>img.remove();art.prepend(img);
+            img.onerror=()=>{failedPosterUrls.add(poster);if(state.posters.get(f.id)===poster)state.posters.delete(f.id);img.remove()};art.prepend(img);
           }
         }
         if(f.id===discovery.slides[discovery.index]?.id)
           $("cinemaHeroBackdrop").style.backgroundImage='url("'+poster.replace(/"/g,"%22")+'")';
-      }).catch(()=>{});
-    if(window.requestIdleCallback)requestIdleCallback(req,{timeout:2300});
-    else setTimeout(req,200);
+      }).catch(()=>{}).finally(()=>{
+        state.posterLookups.delete(f.id);
+        if(!state.posters.has(f.id))posterRetryAt.set(f.id,Date.now()+5*60*1000);
+      }));
+    pumpPosterQueue();
+  }
+  function pumpPosterQueue(){
+    // A bounded queue prevents hundreds of concurrent thumbnail lookups.
+    while(posterActive<MAX_POSTER_REQUESTS&&posterQueue.length){
+      const task=posterQueue.shift();
+      posterActive++;
+      Promise.resolve().then(task).catch(()=>{}).finally(()=>{
+        posterActive--;
+        pumpPosterQueue();
+      });
+    }
   }
   async function getCommons(f){
     if(state.sources.has(f.id))return state.sources.get(f.id);
@@ -762,14 +928,34 @@
     state.library.history=[f.id,...state.library.history.filter(id=>id!==f.id)].slice(0,40);
     saveLibrary();
   }
+  let detailReturnFocus=null;
+  let playerReturnFocus=null;
+  function restoreFocus(target,fallback){
+    const node=target?.isConnected?target:$(fallback);
+    if(node?.isConnected&&typeof node.focus==="function"){
+      try{node.focus({preventScroll:true});}catch(_){node.focus();}
+    }
+  }
+  function detailPosterUrl(f){
+    // Prefer artwork already loaded; otherwise retain source-provided posters.
+    // Ignore non-HTTPS or already failed resources.
+    return [state.posters.get(f.id),f.poster].find(value=>
+      typeof value==="string"&&/^https:\/\//i.test(value)&&!failedPosterUrls.has(value))||null;
+  }
   function openDetails(f){
+    // Preserve the true opener across asynchronous artwork and modal changes.
+    if($("cinemaDetails").classList.contains("hidden"))detailReturnFocus=document.activeElement;
     state.selected=f;updateBack();buzz();
     if(typeof CustomEvent!=='undefined'&&typeof document.dispatchEvent==='function')document.dispatchEvent(new CustomEvent('vetogram:cinema-opened',{detail:{
       id:String(f.id),title:f.title,subtitle:f.contentType||'Фильм',
       progress:state.library.progress[f.id]?.d?state.library.progress[f.id].t/state.library.progress[f.id].d:0
     }}));
-    text("cinemaDetailsTitle",f.title);
+    text("cinemaDetailsTitle",displayFilmTitle(f));
     text("cinemaDetailsMeta",[f.original,f.year,f.minutes?f.minutes+" мин":null,...(f.genres||[])].filter(Boolean).join(" · "));
+    const access=movieAccess(f);
+    text("cinemaDetailsAvailability",access.label+" · "+access.explanation);
+    const accessNode=$("cinemaDetailsAvailability");
+    if(accessNode)accessNode.dataset.access=access.kind;
     text("cinemaDetailsSynopsis",f.synopsis);
     if(f.contentType==="Сериалы"&&f.player){
       text("cinemaDetailsTitle",seriesShowName(f));
@@ -779,7 +965,10 @@
     renderEpisodeChooser(f);
     text("cinemaDetailsCreator",f.creator);
     text("cinemaDetailsLanguage",f.externalRutube?(f.audioClaim?"Загрузчик указывает дубляж, но звуковая дорожка не проверена. Откроется оригинальная страница RUTUBE; права на встраивание не установлены.":"Русская дорожка не проверена. Откроется оригинальная страница RUTUBE."):f.discoveryOnly?(f.russianAudio?f.russianAudio.note+" Источник: "+f.watchProvider+".":"Русскую дорожку для этого фильма пока не подтвердил ни один проверенный официальный источник."):f.player?"Язык: "+(f.spoken||"по данным источника")+". Видеопоток передаёт провайдер, а не наши серверы.":"Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
-    $("cinemaDetailsWatch").textContent=f.externalRutube?"↗ Открыть видео на RUTUBE":f.contentType==="Сериалы"&&f.player?"▶ Смотреть выбранную серию":f.discoveryOnly?(f.watchAvailability==="unavailable"?"↗ Проверить статус у сервиса":f.russianAudio?"↗ Проверить просмотр на русском":"↗ Найти легальный просмотр"):"▶ Смотреть";
+    $("cinemaDetailsWatch").textContent=f.externalRutube?"↗ Открыть у источника":f.discoveryOnly
+      ?(f.watchAvailability==="unavailable"?"↗ Проверить статус у сервиса":"↗ Проверить доступность")
+      :access.kind==="embedded"?(f.contentType==="Сериалы"?"▶ Смотреть серию":"▶ Смотреть")
+      :access.kind==="archive"?"▶ Проверить видео":access.kind==="unavailable"?"↗ Страница источника":"▶ Проверить источник";
     $("cinemaDetailsSource").textContent=f.externalRutube?"Оригинальная публикация RUTUBE ↗":f.discoveryOnly?"Страница с языками и доступностью ↗":"Перейти к источнику ↗";
     $("cinemaDetailsSource").href=filmPage(f);
     $("cinemaDetailsLicense").href=f.licenseUrl;
@@ -787,9 +976,24 @@
     $("cinemaDetailsFavorite").textContent=state.library.favorites.includes(f.id)?"♥ В избранном":"♡ В избранное";
     const art=$("cinemaDetailsArt");art.replaceChildren();
     art.style.background="radial-gradient(circle at 65% 30%,hsl("+f.hue+" 50% 45%),transparent 62%),linear-gradient(120deg,#29334f,#31223c)";
-    if(state.posters.has(f.id)){const image=node("img");image.alt="Кадр из фильма "+f.title;image.src=state.posters.get(f.id);image.onerror=()=>image.remove();art.prepend(image)}
-    else if(!f.discoveryOnly)requestPoster(f);
+    // The catalog's own artwork is also valid here: discovery-only titles
+    // often have a verified poster URL but no generated Commons thumbnail.
+    const poster=detailPosterUrl(f);
+    if(poster){
+      const image=node("img");
+      image.alt="Постер: "+displayFilmTitle(f);
+      image.decoding="async";
+      image.src=poster;
+      image.onerror=()=>{
+        failedPosterUrls.add(poster);
+        if(state.posters.get(f.id)===poster)state.posters.delete(f.id);
+        image.remove();
+        if(!f.discoveryOnly&&!f.externalRutube)requestPoster(f);
+      };
+      art.prepend(image);
+    }else if(!f.discoveryOnly&&!f.externalRutube)requestPoster(f);
     $("cinemaDetails").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
+    $("cinemaDetailsClose").focus?.({preventScroll:true});
     if(f.player)fetchApprovedSources(f);
     if(!f.player&&!f.discoveryOnly)getCommons(f).then(src=>{
       if(state.selected?.id!==f.id||!src.poster)return;
@@ -801,6 +1005,9 @@
     state.selected=null;$("cinemaDetails").classList.add("hidden");
     document.body.classList.toggle("cinema-modal-open",Boolean(state.playing));updateBack();
     if(!state.playing)try{history.replaceState({}, "", location.pathname+(window.VetogramMediaContext?.embedded?"?universe=1":""))}catch(_){}
+    const origin=detailReturnFocus;
+    detailReturnFocus=null;
+    if(!state.playing)restoreFocus(origin,"cinemaHeroWatch");
   }
   function toggleFavorite(f){
     const list=state.library.favorites;
@@ -829,6 +1036,8 @@
     video.pause();video.removeAttribute("src");video.load();cleanupSubtitle();
     state.playing=null;state.activePlayerSource=null;$("cinemaPlayer").classList.add("hidden");
     document.body.classList.toggle("cinema-modal-open",Boolean(state.selected));updateBack();render();
+    restoreFocus(playerReturnFocus,state.selected?"cinemaDetailsWatch":"cinemaHeroWatch");
+    playerReturnFocus=null;
   }
   function saveProgress(force){
     const f=state.playing;if(!f||!Number.isFinite(video.duration)||video.duration<=0)return;
@@ -862,7 +1071,9 @@
     finally{clearTimeout(timer)}
   }
   async function play(f, chosenSource){
-    if(f.discoveryOnly){
+    if(!state.playing)playerReturnFocus=document.activeElement;
+    // External movie discovery is never an embed grant, regardless of metadata.
+    if(f.externalRutube||f.discoveryOnly){
       const official=filmPage(f);
       if(!/^https:\/\//.test(official))return;
       try{if(tg?.openLink)tg.openLink(official);else window.open(official,"_blank","noopener,noreferrer")}
@@ -873,7 +1084,7 @@
     clearTimeout(providerFeedbackTimer);
     try{state.embedHandle?.cleanup()}catch(_){}state.embedHandle=null;
     state.playing=f;setHistory(f);updateBack();buzz();
-    window.dispatchEvent(new CustomEvent('vetogram:cinema-playing'));
+    // Opening a player does not prove video started. Keep music playing until confirmed.
     const choices=approvedSources(f);
     const current=choices.find(x=>chosenSource&&x.url===chosenSource.url)||choices[0];
     state.activePlayerSource=current||null;
@@ -884,7 +1095,7 @@
     providerSelect.onchange=()=>{const next=approvedSources(f)[Number(providerSelect.value)];if(next)play(f,next)};
     text("cinemaProviderHint",choices.length>1?choices.length+" проверенных вариантов":"Видеопоток предоставляется источником");
     $("cinemaPlayer").classList.remove("hidden");document.body.classList.add("cinema-modal-open");
-    text("cinemaPlayerTitle",f.title);text("cinemaPlayerCredit",f.creator+" · условия источника доступны по ссылке");
+    text("cinemaPlayerTitle",displayFilmTitle(f));text("cinemaPlayerCredit",f.creator+" · условия источника доступны по ссылке");
     $("cinemaPlayerSource").href=filmPage(f);
     $("cinemaOpenSource").href=filmPage(f);
     text("cinemaSubtitleStatus",current?(current.type==="iframe"?"Язык, качество и субтитры переключаются в меню самого видеоплеера.":"Аудиодорожки доступны, если их предоставляет источник."):"Проверяем русские субтитры…");
@@ -920,6 +1131,7 @@
             if(token!==state.request||state.playing?.id!==f.id)return;
             if(event.type==="duration"){state.embedDuration=event.duration;return}
             if(event.type==="playStarted"||(event.type==="state"&&event.state==="playing")){
+              if(!playbackConfirmed)window.dispatchEvent(new CustomEvent("vetogram:cinema-playing"));
               playbackConfirmed=true;
               clearTimeout(providerFeedbackTimer);
               failedEmbeds.delete(f.id);
@@ -1001,6 +1213,13 @@
     setPlayerMessage("");
     video.play().catch(()=>{/* browser may require user interaction; native play button remains */});
   });
+  // A standalone tab may be closed without a final pause event. Persist
+  // only the real HTMLVideoElement's watch position; licensed third-party
+  // iframes with unobservable playback must not invent a resume timestamp.
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)saveProgress(true);
+  });
+  window.addEventListener('pagehide',()=>saveProgress(true));
   video.addEventListener("timeupdate",()=>saveProgress(false));
   video.addEventListener("pause",()=>saveProgress(true));
   video.addEventListener("ended",()=>{saveProgress(true);toast("Фильм досмотрен. Выбирай следующую историю.")});
@@ -1015,15 +1234,42 @@
   $("cinemaPlayerClose").addEventListener("click",closePlayer);
   $("cinemaDetailsClose").addEventListener("click",closeDetails);
   $("cinemaDetails").addEventListener("click",e=>{if(e.target===$("cinemaDetails"))closeDetails()});
-  $("cinemaDetailsWatch").addEventListener("click",()=>{if(state.selected)play(state.selected)});
+  $("cinemaDetailsWatch").addEventListener("click",()=>{
+    if(!state.selected)return;
+    // A failed or unsupported player may not initiate a broken playback.
+    // Let the user open the original source with one explicit tap instead.
+    if(movieAccess(state.selected).kind==="unavailable"){
+      const link=$("cinemaDetailsSource");
+      if(link?.href?.startsWith("https://"))link.click();
+      else toast("Видеоплеер недоступен. Проверь страницу источника.");
+      return;
+    }
+    play(state.selected);
+  });
   $("cinemaDetailsFavorite").addEventListener("click",()=>{if(state.selected)toggleFavorite(state.selected)});
   $("cinemaDetailsShare").addEventListener("click",()=>{if(state.selected)shareFilm(state.selected)});
-  $("cinemaHeroWatch").addEventListener("click",()=>{const f=discovery.slides[discovery.index];if(f)play(f)});
+  $("cinemaHeroWatch").addEventListener("click",()=>{
+    const f=discovery.slides[discovery.index];
+    if(!f)return;
+    if(movieAccess(f).kind!=="embedded"){openDetails(f);return;}
+    play(f);
+  });
   $("cinemaHeroDetails").addEventListener("click",()=>{const f=discovery.slides[discovery.index];if(f)openDetails(f)});
   $("cinemaHeroPrev").addEventListener("click",()=>setHeroSlide(discovery.index-1));
   $("cinemaHeroNext").addEventListener("click",()=>setHeroSlide(discovery.index+1));
   $("cinemaSearch").addEventListener("input",e=>{state.query=e.target.value.slice(0,90);state.visible=100;if(state.tab==="library")setTab("search");else if(state.tab==="home"){$("cinemaHero").classList.add("hidden")}render();clearTimeout(catalogDebounce);catalogDebounce=setTimeout(()=>fetchCatalog(true),350)});
   $("cinemaClear").addEventListener("click",()=>{$("cinemaSearch").value="";state.query="";state.visible=100;render();fetchCatalog(true)});
+  $("cinemaPlayableOnly").addEventListener("change",event=>{
+    state.onlyPlayable=Boolean(event.target.checked);
+    state.visible=100;
+    if(state.onlyPlayable&&["home","foreign"].includes(state.tab)){
+      // The native Search tab keeps any typed query when switching modes.
+      // Catalog would otherwise clear it and discard the user’s search.
+      setTab("search");
+      return;
+    }
+    render();
+  });
   $("cinemaLoadMore").addEventListener("click",()=>fetchCatalog(false));
   $("cinemaStudioMore").addEventListener("click",()=>loadStudio(false));
   $("cinemaForeignAll").addEventListener("click",()=>setTab("foreign"));
@@ -1058,7 +1304,7 @@
   try{if(localStorage.getItem("vetogram.cinema.theme")==="light")document.body.classList.add("cinema-light")}catch(_){}
   if(films.length){
     text("cinemaHeroMeta",films[0].year+" · "+films[0].minutes+" мин · "+films[0].genres.join(" / "));
-    text("cinemaHeroTitle",films[0].title);
+    text("cinemaHeroTitle",displayFilmTitle(films[0]));
     text("cinemaHeroDescription",films[0].synopsis);
     requestPoster(films[0]);
     const params=new URLSearchParams(location.search);const film=filmById(params.get(FILM_KEY));if(film)openDetails(film);

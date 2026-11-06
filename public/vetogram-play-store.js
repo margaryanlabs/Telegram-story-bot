@@ -130,8 +130,25 @@
     const selected=gameElements.find(x=>x.dataset.vpGame===incomingId);
     selected?.classList?.add('vp-incoming-target');
     message('По ссылке выбрана игра «'+byId.get(incomingId).name+'». Нажми на неё, чтобы играть.');
-    window.addEventListener?.('veto:screen-changed',event=>{
-      if(event?.detail?.screen==='play')selected?.scrollIntoView?.({behavior:'smooth',block:'center'});
-    },{once:true});
+    const reveal=()=>{
+      // Deep links must target the visible V9 launcher rather than a hidden
+      // legacy catalog card. Only a known, locally installed game may open.
+      if(typeof window.VetogramV9GameOpen==='function' &&
+        window.VetogramV9GameOpen(incomingId)===true){
+        message('Открыта игра «'+byId.get(incomingId).name+'».');
+        return;
+      }
+      selected?.scrollIntoView?.({behavior:'smooth',block:'center'});
+    };
+    // The app may already have navigated to Play before deferred scripts run.
+    // Do not rely only on an event that could have fired before registration.
+    if(root.classList?.contains?.('active')){
+      if(typeof window.requestAnimationFrame==='function')window.requestAnimationFrame(reveal);
+      else reveal();
+    } else {
+      window.addEventListener?.('veto:screen-changed',event=>{
+        if(event?.detail?.screen==='play')reveal();
+      },{once:true});
+    }
   }
 })();

@@ -19,7 +19,7 @@ const style=read('public/vetogram-media-edition-62.css');
 
 test('one media edition is loaded after existing per-module styles on all three real module entrypoints',()=>{
   for(const html of [musicHtml,cinemaHtml,booksHtml]){
-    const marker='/vetogram-media-edition-62.css?v=20261031-media62';
+    const marker='/vetogram-media-edition-62.css?v=';
     assert.ok(html.includes(marker));
     assert.ok(html.indexOf(marker)>html.indexOf('/vetogram-media-embedded.css'));
   }

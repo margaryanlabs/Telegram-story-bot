@@ -27,7 +27,7 @@ function item(){
 }
 function scene(){
   const grid=item(),mount=item(),dialog=item(),close=item();
-  const cards=Array.from({length:4},()=>item());
+  const cards=Array.from({length:6},()=>item());
   for(const card of cards)grid.appendChild(card);
   cards.forEach((card,i)=>{card.nextSibling=cards[i+1]||null});
   dialog.open=false;
@@ -50,9 +50,9 @@ function scene(){
   runInNewContext(code,{document,window,Array});
   return {grid,mount,dialog,close,cards,body,events};
 }
-test('Play runner attaches play controls only to four native local games',()=>{
+test('Play runner attaches play controls only to six native local games',()=>{
   const ui=scene();
-  assert.equal(ui.cards.length,4);
+  assert.equal(ui.cards.length,6);
   assert.ok(ui.cards.every(c=>c.children.length===1));
   assert.match(html,/id="vpGameDialog"/);
   assert.match(html,/vetogram-play-runner\.js/);
@@ -78,4 +78,19 @@ test('Navigation away closes the current mini-game cleanly',()=>{
 });
 test('Game runner does not access chat session or perform remote calls',()=>{
   assert.doesNotMatch(code,/\bfetch\s*\(|XMLHttpRequest|initData|sendMessage|telegram-chats|document\.cookie/);
+});
+
+test('rapidly switching native games survives an asynchronous WebView close event',()=>{
+  const ui=scene();
+  ui.dialog.close=()=>{ui.dialog.open=false;}; // simulate late native close event
+  const [first,second]=ui.cards;
+  first.children[0].events.click();
+  assert.equal(first.parentNode,ui.mount);
+  second.children[0].events.click();
+  assert.equal(first.parentNode,ui.grid,'first game must be restored synchronously');
+  assert.equal(second.parentNode,ui.mount);
+  ui.close.events.click();
+  assert.equal(second.parentNode,ui.grid,'second game must be restored synchronously');
+  ui.dialog.events.close?.(); // late close should be idempotent
+  assert.equal(ui.grid.children.length,6);
 });

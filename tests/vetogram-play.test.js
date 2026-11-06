@@ -17,16 +17,17 @@ test('Play Hub is routed inside the existing Vetogram shell', () => {
   assert.match(app, /games:'play'/);
   assert.match(css, /repeat\(6,minmax\(0,1fr\)\)/);
 });
-test('BLOTENQ uses its own documented origin and honest standalone state', () => {
+test('BLOTENQ is clearly unavailable rather than routing to a detached prototype', () => {
   assert.match(html, /BLOTENQ\?/);
-  assert.match(html, /blot-armenian-digital-club\.lovable\.app/);
-  assert.match(html, /Пока открывается отдельно/);
-  assert.match(html, /rel="noopener noreferrer"/);
+  assert.match(html, /BLOTENQ: встроенная версия в разработке/);
+  assert.match(html, /Игровой движок пока не подключён/);
+  assert.doesNotMatch(html, /blot-armenian-digital-club\.lovable\.app/);
 });
-test('WHO? is linked as the separate Group DNA game without pretending native embedding', () => {
+test('WHO? Group DNA is labelled unfinished without linking to a separate preview', () => {
   assert.match(html, /WHO\? \/ Group DNA/);
-  assert.match(html, /id-preview--7643d21a-8d1e-459e-8136-11eded1ed4ae\.lovable\.app/);
-  assert.match(html, /Открыть предпросмотр WHO\?/);
+  assert.match(html, /WHO\? — встроенная версия в разработке/);
+  assert.match(html, /В разработке для Vetogram/);
+  assert.doesNotMatch(html, /id-preview--7643d21a-8d1e-459e-8136-11eded1ed4ae\.lovable\.app/);
 });
 test('Play bundle does not read messages, Telegram tokens or call remote endpoints', () => {
   assert.doesNotMatch(play, /\bfetch\s*\(|XMLHttpRequest|initData|telegram-chats|sessionStorage|sendMessage|postMessage/);
@@ -100,4 +101,19 @@ test('memory game has eight playable cards and supports reset', () => {
   ui.selectors.get('#vpMemoryReset').click();
   assert.equal(grid.children.length,8);
   assert.ok(grid.children.every(card=>card.dataset.revealed==='false'));
+});
+
+test('Reaction cancels its timer when game modal closes or screen is hidden',()=>{
+ const ui=harness(),button=ui.selectors.get('#vpReactionButton');
+ button.click();
+ assert.equal(button.dataset.state,'waiting');
+ assert.equal(ui.pending(),1);
+ ui.handlers.get('window:vetogram:game-close')({detail:{game:'reaction'}});
+ assert.equal(button.dataset.state,'idle');
+ assert.equal(ui.pending(),0);
+ button.click();
+ assert.equal(ui.pending(),1);
+ ui.handlers.get('window:veto:screen-changed')({detail:{screen:'media'}});
+ assert.equal(ui.pending(),0);
+ assert.equal(button.dataset.state,'idle');
 });

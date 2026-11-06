@@ -88,11 +88,38 @@
   const puzzleBest = $('#vp2048Best');
   const puzzleStatus = $('#vp2048Status');
   const puzzleReset = $('#vp2048Reset');
+  const puzzleUndo = $('#vp2048Undo');
   const PUZZLE_BEST = 'vetogram:play:2048-best:v1';
+  const PUZZLE_SESSION = 'vetogram:play:2048-session:v1';
   let board = Array(16).fill(0);
   let points = 0;
   let finished = false;
   let achieved2048 = false;
+  let previousMove = null;
+  function persistPuzzle() {
+    // Only our own 16 tiles and current game score; no account, chat or
+    // player identity. A blocked storage write must never stop gameplay.
+    try {
+      window.localStorage?.setItem(PUZZLE_SESSION,JSON.stringify({
+        board:board.slice(),points,finished,achieved2048
+      }));
+    } catch {}
+  }
+  function restorePuzzle() {
+    let data=null;
+    try { data=JSON.parse(window.localStorage?.getItem(PUZZLE_SESSION)||'null'); }
+    catch { return false; }
+    if(!data||!Array.isArray(data.board)||data.board.length!==16 ||
+       !data.board.every(n=>Number.isSafeInteger(n)&&n>=0&&n<=131072&&
+         (n===0||(n&(n-1))===0))||
+       data.board.filter(Boolean).length<2||
+       !Number.isSafeInteger(data.points)||data.points<0||data.points>100000000||
+       typeof data.finished!=='boolean'||typeof data.achieved2048!=='boolean')return false;
+    board=data.board.slice();points=data.points;finished=data.finished;
+    achieved2048=data.achieved2048;previousMove=null;
+    if(puzzleStatus)puzzleStatus.textContent='Предыдущая партия восстановлена на этом устройстве.';
+    displayPuzzle();return true;
+  }
   function spawn() {
     const empty=board.map((v,i)=>v?null:i).filter(v=>v!==null);
     if (!empty.length) return;
@@ -151,17 +178,20 @@
     });
     if(puzzleScore)puzzleScore.textContent='Очки: '+points;
     if(puzzleBest)puzzleBest.textContent='Рекорд: '+Math.max(points,read(PUZZLE_BEST));
+    if(puzzleUndo)puzzleUndo.disabled=!previousMove;
   }
   function movePuzzle(dir) {
     if(finished || !['up','down','left','right'].includes(dir))return false;
     let moved=false,earned=0;
     const copy=board.slice();
+    const beforeMove={board:copy,points,finished,achieved2048};
     for (const line of linesFor(dir)){
       const {result,earned:gain}=collapse(line.map(i=>board[i]));
       earned+=gain;
       result.forEach((v,j)=>{if(v!==copy[line[j]])moved=true;board[line[j]]=v;});
     }
     if(!moved)return false;
+    previousMove=beforeMove;
     points+=earned;
     if(points>read(PUZZLE_BEST))save(PUZZLE_BEST,points);
     if(!achieved2048&&board.some(v=>v>=2048)) {
@@ -171,16 +201,26 @@
     spawn();
     if(!canMove()){finished=true;if(puzzleStatus)puzzleStatus.textContent='Ходов больше нет — начни заново.';}
     else if(!achieved2048&&puzzleStatus)puzzleStatus.textContent='Соединяй одинаковые плитки.';
-    displayPuzzle();haptic();return true;
+    displayPuzzle();persistPuzzle();haptic();return true;
+  }
+  function undoPuzzle() {
+    if(!previousMove)return false;
+    const state=previousMove;
+    previousMove=null;
+    board=state.board.slice();points=state.points;
+    finished=state.finished;achieved2048=state.achieved2048;
+    if(puzzleStatus)puzzleStatus.textContent='Последний ход отменён. Личный рекорд сохраняется.';
+    displayPuzzle();persistPuzzle();haptic();return true;
   }
   function resetPuzzle() {
-    board=Array(16).fill(0);points=0;finished=false;achieved2048=false;
+    board=Array(16).fill(0);points=0;finished=false;achieved2048=false;previousMove=null;
     spawn();spawn();
     if(puzzleStatus)puzzleStatus.textContent='Соединяй одинаковые плитки.';
-    displayPuzzle();
+    displayPuzzle();persistPuzzle();
   }
   root.querySelectorAll?.('[data-vp-2048]')?.forEach(btn => btn.addEventListener('click',()=>movePuzzle(btn.dataset.vp2048)));
   puzzleReset?.addEventListener('click',()=>{haptic();resetPuzzle();});
+  puzzleUndo?.addEventListener('click',undoPuzzle);
   let touch=null;
   puzzleGrid?.addEventListener('touchstart',event=>{
     if(event.touches?.length!==1)return;
@@ -194,12 +234,17 @@
     movePuzzle(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));
   },{passive:true});
   document.addEventListener('keydown',event=>{
-    if(!root.classList?.contains('active'))return;
+    // Keys belong only to the actual focused 2048 game: native dialog OR
+    // V9 inline arcade. Never steal arrows from Snake or the Play catalog.
+    const inline2048=root.classList?.contains('v9-arcade-active') &&
+      root.dataset?.v9ActiveGame==='2048';
+    if(!root.classList?.contains('active') ||
+       !(inline2048||puzzleGrid?.closest?.('.vp-game-in-dialog')))return;
     const target=event.target;
     if(target?.isContentEditable || ['INPUT','TEXTAREA','SELECT'].includes(target?.tagName))return;
     const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
     if(map[event.key]){event.preventDefault?.();movePuzzle(map[event.key]);}
   });
   resetTtt();
-  resetPuzzle();
+  if(!restorePuzzle())resetPuzzle();
 })();

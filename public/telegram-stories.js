@@ -43,7 +43,12 @@
     if (state.url) URL.revokeObjectURL(state.url);
     state.url = null;
   }
-  function closeViewer() {
+  // Presentation-only bridge to the single Telegram native Back controller.
+  // No story URL, contact ID or owner data travels in this event.
+  function notifyStoryViewChanged(){
+    window.dispatchEvent(new CustomEvent('vetogram:story-view-changed'));
+  }
+  function closeViewer({restoreFocus=true}={}) {
     state.epoch++;
     hideMedia();
     state.mediaBusy = false;
@@ -51,14 +56,23 @@
     viewer.hidden = true;
     viewer.replaceChildren();
     document.body.classList.remove('veto-stories-open');
+    notifyStoryViewChanged();
     const previous = state.priorFocus;
     state.priorFocus = null;
-    if (previous?.isConnected) previous.focus({preventScroll:true});
+    // On a screen switch, owner reset or backgrounding, focus must never
+    // jump into a hidden previous chat or reactivate its on-screen keyboard.
+    const focusScreen=previous?.closest?.('.screen');
+    if(restoreFocus && !document.hidden && previous?.isConnected &&
+      (!focusScreen || focusScreen.classList.contains('active')))
+      previous.focus({preventScroll:true});
   }
+  // Exactly the same cleanup path as the visible × button: stops playback,
+  // revokes private blob media and restores the previous focus target.
+  window.VetoTelegramStoryBack=closeViewer;
   function resetOwner() {
     const current = String(tg?.initData || '');
     if (current === state.owner) return false;
-    closeViewer();
+    closeViewer({restoreFocus:false});
     state.owner = current;state.contacts = [];state.viewMode = null;
     state.loadedAt = 0;state.partial = false;state.lastError = null;
     // Personal contact preferences are volatile: never save Telegram identities on device.
@@ -70,7 +84,7 @@
   async function call(action,payload={},wantMedia=false) {
     resetOwner();
     const owner = String(tg?.initData || '');
-    if (!owner) throw new Error('Открой VETO через Telegram и подключи личный аккаунт.');
+    if (!owner) throw new Error('Открой Vetogram через Telegram и подключи личный аккаунт.');
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(),35000);
     try {
@@ -121,12 +135,17 @@
     for (const button of bar.querySelectorAll('[data-veto-story-person]')) {
       const index = Number(button.dataset.vetoStoryPerson);
       const face = button.querySelector('.veto-story-face');
-      const src = known.get(state.contacts[index]?.userId);
+      // Dataset IDs are strings; Telegram story userId may be numeric.
+      const person=state.contacts[index];
+      const src = person ? known.get(String(person.userId)) : null;
       if (!face || !src || face.querySelector('img')?.src === src) continue;
       const image = document.createElement('img');
       image.src = src;
       image.alt = '';
       image.className = 'veto-story-contact-photo';
+      image.addEventListener('error',()=>{
+        if(face.contains(image))face.textContent=initials(person.name);
+      },{once:true});
       face.replaceChildren(image);
     }
   }
@@ -257,6 +276,7 @@
     if (!contact || !story) return;
     viewer.hidden = false;
     document.body.classList.add('veto-stories-open');
+    notifyStoryViewChanged();
     viewer.innerHTML =
       '<div class="veto-story-stage">'+
       '<div class="veto-story-progress">'+stories.map((_,i)=>
@@ -404,14 +424,18 @@
   });
   window.addEventListener('veto:screen-changed',event=>{
     resetOwner();
-    if (['telegram','publish'].includes(event.detail?.screen))void loadStories();
-    else closeViewer();
+    const destination=event.detail?.screen;
+    // Story viewer belongs to the Chats screen. Moving into the Stories
+    // publishing tab must dismiss the old full-screen viewer first.
+    if(destination!=='telegram'&&!viewer.hidden)
+      closeViewer({restoreFocus:false});
+    if(['telegram','publish'].includes(destination))void loadStories();
   });
   window.addEventListener('pageshow',resetOwner);
   document.addEventListener('visibilitychange',()=>{
     if (document.hidden) {
       // Never leave private media playing in the background.
-      closeViewer();
+      closeViewer({restoreFocus:false});
     } else resetOwner();
   });
   if (typeof MutationObserver !== 'undefined' && $('telegramMirrorList')) {

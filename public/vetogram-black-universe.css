@@ -1,0 +1,294 @@
+/* VETOGRAM 7 / BLACK UNIVERSE
+ * One calm visual system shared by Messenger, Media, Cinema, Books and Music.
+ * Loaded LAST; respects the explicitly selected light/sepia reading modes
+ * and the user's custom chat wallpaper.
+ */
+:root{
+  --vet-black:#000;
+  --vet-panel:#101012;
+  --vet-panel-raised:#18181c;
+  --vet-border:rgba(255,255,255,.10);
+  --vet-ink:#f6f4f6;
+  --vet-muted:#aaa5b0;
+  --vet-pink:#ef75a0;
+}
+/* Main shell: never force black over explicitly chosen light shell themes. */
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]){
+  color-scheme:dark;
+  --v6-bg:#000;
+  --v6-surface:#101012;
+  --v6-line:var(--vet-border);
+  --v6-text:var(--vet-ink);
+  --v6-muted:var(--vet-muted);
+  --v6-accent:var(--vet-pink);
+  --noir-bg:#000;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]),
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"]) body:not(.veto-chat-thread){
+  background:#000!important;
+  background-image:none!important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ :is(.v61-home,.v6-media-stage,.v6-profile,.v61-vault,.vp-arcade,.v6-media,.v6-world-section){
+  background-color:#000!important;
+  background-image:none!important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ :is(.v61-hero,.v61-vault-spotlight,.v6-world,.v6-profile-card,.vp-card,.v61-player-sheet){
+  border-color:var(--vet-border)!important;
+  box-shadow:none!important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ :is(.v61-vault-spotlight,.v6-world,.v6-profile-card,.vp-card){
+  background:var(--vet-panel)!important;
+  background-image:none!important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .v61-hero{
+  background:radial-gradient(ellipse 80% 110% at 110% -10%,rgba(233,167,186,.10),transparent 65%),#000!important;
+  color:var(--vet-ink);
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .bottom-nav{
+  background:rgba(7,7,9,.96)!important;
+  border-color:var(--vet-border)!important;
+  -webkit-backdrop-filter:blur(24px);
+  backdrop-filter:blur(24px);
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .nav-item.active{
+  color:var(--vet-pink)!important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .v6-module-bar{
+  background:#000!important;
+  border-bottom:1px solid var(--vet-border)!important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .v6-world:hover{
+  background:var(--vet-panel-raised)!important;
+  border-color:rgba(233,167,186,.34)!important;
+}
+html#vetogram.vetogram-noir:not([data-veto-theme="pearl"]):not([data-veto-theme="linen"])
+ .v61-player-sheet{
+  background:#101012!important;
+}
+
+/* Embedded media: the base surfaces are true black, visual interest is in real art. */
+html:has(body #cinemaPlayer),
+html:has(body #reader),
+html:has(body #playerBar){color-scheme:dark}
+body:has(#cinemaPlayer),
+body:has(#reader),
+body:has(#playerBar){
+  background:#000!important;
+  background-image:none!important;
+}
+body:has(#cinemaPlayer) :is(.cinema-header,.cinema-bottom,.cinema-section-nav){
+  background:rgba(8,8,10,.97)!important;
+  border-color:var(--vet-border)!important;
+}
+body:has(#cinemaPlayer) .cinema-hero{
+  background:#101012!important;
+  border:1px solid var(--vet-border)!important;
+  box-shadow:none!important;
+}
+body:has(#cinemaPlayer) :is(.cinema-card,.cinema-studio-card,.cinema-watch-card){
+  background:var(--vet-panel)!important;
+  border-color:var(--vet-border)!important;
+}
+body:has(#cinemaPlayer) .cinema-card-art:has(img) .cinema-card-art-title{
+  /* Keep the clean poster visible; the accessible title stays below it. */
+  display:none!important;
+}
+body:has(#cinemaPlayer) .cinema-card-art img{
+  width:100%;height:100%;object-fit:cover;
+}
+body:has(#cinemaPlayer) .cinema-player-shell{
+  background:#000!important;
+}
+body:has(#playerBar) :is(.app,.main,.sidebar,.mobile-nav){
+  background:#000!important;
+  background-image:none!important;
+}
+body:has(#playerBar) :is(.topbar,.player-bar){
+  background:rgba(12,12,14,.97)!important;
+  border-color:var(--vet-border)!important;
+}
+body:has(#playerBar) :is(.hero,.catalog-hero,.charts-hero,.archive-hero,.mixter-hero){
+  background:linear-gradient(160deg,#19151b,#101012 62%,#0c0b0e)!important;
+  border-color:var(--vet-border)!important;
+}
+body:has(#playerBar) :is(.catalog-track,.chart-track,.track-row,.native-track,.archive-track,.mixter-track){
+  background:var(--vet-panel)!important;
+  border-color:var(--vet-border)!important;
+}
+body:has(#reader) :is(.books-main,.topbar){
+  background-color:#000!important;
+  background-image:none!important;
+}
+body:has(#reader) :is(.book,.featured-edition,.hero-show-book){
+  background-color:var(--vet-panel)!important;
+  border-color:var(--vet-border)!important;
+}
+/* Keep distinct in-house book-jacket artwork, rather than replacing every
+ * book with the same dark gradient. Original publisher covers are not invented. */
+body:has(#reader) .book-cover.placeholder{
+  filter:saturate(.88) contrast(1.05);
+  border-color:var(--vet-border)!important;
+}
+body:has(#reader) .book-cover.source-art{
+  filter:none;
+}
+body:has(#reader) .reader:not([data-theme="light"]):not([data-theme="sepia"]){
+  --reader-bg:#0d0d10;
+  --reader-color:#f1eaf0;
+  --reader-line:rgba(255,255,255,.11);
+  --reader-muted:#b3aeb6;
+}
+body:has(#reader) .reader:not([data-theme="light"]):not([data-theme="sepia"])
+ :is(.reader-top,.reader-bottom,.reader-paper){
+  background-color:var(--reader-bg)!important;
+}
+
+/* Accessibility and calm performance on older mobile devices. */
+:is(.nav-item,.v6-world,.cinema-card,.book-main,.catalog-track):focus-visible{
+  outline:2px solid var(--vet-pink)!important;
+  outline-offset:3px;
+}
+@media (max-width:600px){
+  body:has(#cinemaPlayer) .cinema-card-art img{transform:none}
+  body:has(#playerBar) .player-bar{backdrop-filter:blur(18px)}
+}
+@media (prefers-reduced-motion:reduce){
+  :is(.v6-world,.cinema-card,.cinema-card-art img,.book-cover,.catalog-track){
+    animation:none!important;transition:none!important;
+  }
+}
+
+/* The reading error action is visible without leaving the current chapter. */
+body:has(#reader) .reader-retry{
+  display:block;
+  margin:22px auto 8px;
+  border-radius:14px;
+  border:1px solid rgba(233,167,186,.42);
+  background:rgba(233,167,186,.11);
+  color:inherit;
+  padding:13px 20px;
+  font:650 14px/1.3 system-ui,sans-serif;
+  min-height:44px;
+  cursor:pointer;
+}
+body:has(#reader) .reader-retry[hidden]{display:none!important}
+body:has(#reader) .reader-retry:focus-visible{
+  outline:2px solid var(--vet-pink);outline-offset:3px;
+}
+
+/* Distinct fallback album art is text-based, not a fake artist photograph. */
+body:has(#playerBar) :is(.track-cover,.catalog-cover){
+  display:grid;place-items:center;
+  overflow:hidden;isolation:isolate;
+  border-radius:12px;
+  background:linear-gradient(145deg,#322532 4%,#19151e 55%,#131317)!important;
+  color:#f2d4de;
+  font-size:clamp(17px,2.2vw,27px);
+  font-weight:800;
+  letter-spacing:-.05em;
+}
+body:has(#playerBar) .track-row:nth-of-type(4n+2) .track-cover,
+body:has(#playerBar) .catalog-track:nth-of-type(4n+2) .catalog-cover{
+  background:linear-gradient(145deg,#203642,#151b29 60%,#101014)!important;
+}
+body:has(#playerBar) .track-row:nth-of-type(4n+3) .track-cover,
+body:has(#playerBar) .catalog-track:nth-of-type(4n+3) .catalog-cover{
+  background:linear-gradient(145deg,#403323,#241b19 60%,#121014)!important;
+}
+body:has(#playerBar) .track-row:nth-of-type(4n+4) .track-cover,
+body:has(#playerBar) .catalog-track:nth-of-type(4n+4) .catalog-cover{
+  background:linear-gradient(145deg,#302949,#201729 60%,#101014)!important;
+}
+body:has(#playerBar) :is(.track-cover,.catalog-cover) img{
+  width:100%;height:100%;object-fit:cover;
+  border-radius:inherit;
+}
+
+/* Final editorial polish: strong covers, less noise, legible metadata. */
+body:has(#cinemaPlayer) .cinema-card-art{
+  overflow:hidden;
+  aspect-ratio:2/3;
+  background:linear-gradient(150deg,#171316 0%,#111114 62%,#0b0b0d)!important;
+  border-radius:12px;
+  isolation:isolate;
+}
+/* Only missing-poster cards show editorial title in place of artwork.
+   Real poster cards deliberately keep their image unobstructed. */
+body:has(#cinemaPlayer) .cinema-card-art:not(:has(img)) .cinema-card-art-title{
+  display:-webkit-box!important;
+  position:absolute;z-index:2;left:11px;right:11px;bottom:14px;
+  font:750 clamp(18px,2.6vw,27px)/1.12 system-ui,sans-serif;
+  letter-spacing:-.035em;color:#fff3f7;
+  text-shadow:0 2px 15px #0009;
+  -webkit-box-orient:vertical;-webkit-line-clamp:4;
+  overflow:hidden;overflow-wrap:anywhere;
+}
+body:has(#cinemaPlayer) .cinema-card-art-badge{
+  max-width:calc(100% - 14px);
+  padding:5px 8px;
+  font-size:9px;
+  letter-spacing:.07em;
+  line-height:1.2;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(12,12,14,.80)!important;
+  color:#f5eaf0!important;
+}
+body:has(#cinemaPlayer) .cinema-card-name{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  line-height:1.35;
+}
+body:has(#cinemaPlayer) .cinema-card-meta{
+  line-height:1.35;
+  color:var(--vet-muted)!important;
+}
+body:has(#cinemaPlayer) .cinema-hero-bg{
+  filter:saturate(.82);
+}
+body:has(#cinemaPlayer) .cinema-primary{
+  background:var(--vet-pink)!important;
+  color:#171015!important;
+}
+body:has(#reader) .book-card-label,
+body:has(#reader) .book-bottom{color:var(--vet-muted)}
+body:has(#reader) .book h3{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  line-height:1.35;
+}
+body:has(#reader) .book-cover{
+  overflow:hidden;
+  aspect-ratio:2/3;
+}
+body:has(#playerBar) .player-bar button{
+  min-width:38px;
+  min-height:38px;
+}
+@media (max-width:600px){
+  body:has(#cinemaPlayer) .cinema-rail{
+    scroll-padding-left:16px;
+    -webkit-overflow-scrolling:touch;
+  }
+  body:has(#reader) .book-grid{
+    column-gap:12px;row-gap:18px;
+  }
+  body:has(#playerBar) .player-bar{
+    bottom:max(8px,env(safe-area-inset-bottom));
+    min-width:0;
+  }
+  html#vetogram.vetogram-noir .bottom-nav .nav-item{
+    min-height:46px;
+  }
+}
