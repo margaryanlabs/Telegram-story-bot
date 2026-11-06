@@ -125,8 +125,8 @@ test('Crisis Atlas + Shock Replay + Compare run together without blocking the ev
 
 test('deep-linked connections open their evidence document, not an empty closed card',()=>{
   const modesSource=modes;
-  assert.match(modesSource,/mode === 'connections' && oldMode !== 'connections'\) panelExpanded = true/);
-  assert.match(modesSource,/mode === 'events' && oldMode === 'connections'\) panelExpanded = false/);
+  assert.match(modesSource,/mode === 'connections' && oldMode !== 'connections'\) \{\s*panelExpanded = true;\s*panelFullscreen = false;/);
+  assert.match(modesSource,/mode === 'events' && oldMode === 'connections'\) \{\s*panelExpanded = false;\s*panelFullscreen = false;/);
   assert.match(modesSource,/if \(panelExpanded && state\.mode==='events' && event\.id==='2008'\)/);
   assert.match(modesSource,/get comparedEvent\(\)/);
 });
