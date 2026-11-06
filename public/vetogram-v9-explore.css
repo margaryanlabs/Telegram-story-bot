@@ -244,3 +244,53 @@ html#vetogram.vetogram-noir:is([data-veto-theme="pearl"],[data-veto-theme="linen
   transition:none!important;transform:none!important;
  }
 }
+
+/* V9.5: direct book discovery above the long editorial hero.
+   Source buttons are delegations to the actual native Books catalog. */
+body.vetogram-editorial-books .v9-books-lanes{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:9px;margin:0 0 14px;padding:0;
+}
+body.vetogram-editorial-books .v9-books-lane{
+ display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+ gap:5px;min-width:0;min-height:67px;padding:12px 14px;
+ border:1px solid #333;border-radius:13px;background:#161616;color:#f2f2f2;
+ text-align:left;cursor:pointer;
+ transition:background .2s,border-color .2s,transform .2s;
+}
+body.vetogram-editorial-books .v9-books-lane strong{
+ font:780 13px/1.15 system-ui,sans-serif;letter-spacing:-.025em;
+ white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+}
+body.vetogram-editorial-books .v9-books-lane small{
+ font:510 10px/1.25 system-ui,sans-serif;color:#999;
+ white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+}
+body.vetogram-editorial-books .v9-books-lane.is-active{
+ background:#282828;color:#fff;border-color:#c4c4c4;
+}
+body.vetogram-editorial-books .v9-books-lane:hover{
+ background:#272727;border-color:#a6a6a6;transform:translateY(-2px);
+}
+body.vetogram-editorial-books .v9-books-lane:focus-visible{
+ outline:2px solid #fff;outline-offset:2px;
+}
+@media(max-width:660px){
+ body.vetogram-editorial-books .v9-books-lanes{
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;
+ }
+ body.vetogram-editorial-books .v9-books-lane{min-height:61px;padding:10px 12px}
+ body.vetogram-editorial-books .v9-books-lane strong{font-size:12px}
+}
+@media(max-width:360px){
+ body.vetogram-editorial-books .v9-books-lane{padding:9px 10px}
+ body.vetogram-editorial-books .v9-books-lane small{font-size:9px}
+}
+body.vetogram-editorial-books:has(#reader:not([hidden])) .v9-books-lanes{
+ display:none!important;
+}
+@media(prefers-reduced-motion:reduce){
+ body.vetogram-editorial-books .v9-books-lane{
+  transition:none!important;transform:none!important;
+ }
+}
