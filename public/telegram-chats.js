@@ -15,7 +15,7 @@
     stickerTab:'recent',stickerVisible:16,stickerEpoch:0,stickerQuery:'',
     stickerPreviewUrls:new Map(),recording:null,voiceStarting:false,lastRichFailure:null,
     voicePreset:'original',voiceDraft:null,voicePermissionGeneration:0,autoPages:0,
-    threadCache:new Map(),syncTimer:null,syncBusy:false,syncAbort:null,syncFailures:0,lastSyncedAt:null,syncRunId:0,
+    threadCache:new Map(),syncTimer:null,syncBusy:false,syncAbort:null,syncFailures:0,syncCooldownUntil:0,lastSyncedAt:null,syncRunId:0,
     threadSearch:'',threadSearchIndex:0,deliveryStage:null,inboxReturn:null,activePhotoId:null,
     intelResults:[],intelTimeline:[],intelQuery:'',intelEpoch:0,intelBusy:false,
     intelNextPage:null,intelIncludeVault:false,intelCoverage:null,intelFocus:null,
@@ -1950,7 +1950,7 @@
     stopThreadSync();cancelActivePoll();
     state.syncRunId++; // stale poll completions must not unlock another owner's sync
     state.threadCache.clear();
-    state.syncFailures=0;state.syncBusy=false;
+    state.syncFailures=0;state.syncCooldownUntil=0;state.syncBusy=false;
     state.chats=[];state.messages=[];state.thread=null;state.threadLoadError='';state.threadAuthRejected=false;state.inboxReturn=null;
     clearTimeout(chatFilterTimer);chatFilterTimer=null;
     closeVetoMessengerTools();
@@ -2387,6 +2387,9 @@
   function scheduleThreadSync(ms=26000){
     stopThreadSync();
     if(!maySyncThread())return;
+    // Respect Telegram's server-provided FLOOD_WAIT even when switching chats
+    // or manually pressing refresh. Do not schedule an earlier hidden retry.
+    const wait=Math.max(0,Number(state.syncCooldownUntil||0)-Date.now());
     state.syncTimer=setTimeout(()=>{
       // A failed first/history refresh must recover the real owner-verified
       // thread before incremental polling. Poll only returns a small recent
@@ -2398,7 +2401,7 @@
         return;
       }
       void pollThread();
-    },ms);
+    },Math.max(ms,wait));
   }
   function rememberHotThread(){
     if(!state.thread||!state.messages.length)return;
@@ -2515,6 +2518,12 @@
       if(!state.syncBusy&&maySyncThread())scheduleThreadSync(15000);
       return;
     }
+    const cooldownMs=Math.max(0,Number(state.syncCooldownUntil||0)-Date.now());
+    if(cooldownMs>0){
+      syncLabel('Telegram ограничил обновления · подождём '+Math.ceil(cooldownMs/1000)+' сек.');
+      scheduleThreadSync(cooldownMs);
+      return;
+    }
     const chatId=String(state.thread.id),generation=state.threadGeneration;
     const ownerKey=state.ownerInitData;
     const runId=++state.syncRunId;
@@ -2534,6 +2543,10 @@
       if(!response.ok||!data.ok){
         const issue=new Error(data.error||'Не удалось обновить переписку');
         issue.httpStatus=response.status;
+        if(response.status===429){
+          const wait=Number(data.retryAfterSeconds||response.headers?.get?.('Retry-After')||120);
+          issue.retryAfterSeconds=Number.isFinite(wait)?Math.min(86400,Math.max(30,wait)):120;
+        }
         throw issue;
       }
       if(runId!==state.syncRunId||!maySyncThread()||
@@ -2599,7 +2612,11 @@
         renderMessages();
       }else if(isCurrent){
         state.syncFailures=Math.min(4,state.syncFailures+1);
-        syncLabel(error?.name==='AbortError'?'Telegram отвечает медленно — повторю позже'
+        if(Number(error?.httpStatus)===429){
+          const wait=Number(error.retryAfterSeconds)||120;
+          state.syncCooldownUntil=Math.max(state.syncCooldownUntil,Date.now()+wait*1000);
+          syncLabel('Telegram ограничил обновления · подождём '+Math.ceil(wait)+' сек.');
+        }else syncLabel(error?.name==='AbortError'?'Telegram отвечает медленно — повторю позже'
           :navigator.onLine===false?'Нет сети — обновление приостановлено'
             :'Связь с Telegram прервана — повторю позже');
         // Repeated failures must not erase visible conversations or pretend
