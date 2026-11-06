@@ -146,6 +146,47 @@
      sync();
    }
  }
+ // Books: real Continue backed by persisted progress, never fake pages.
+ if(booksMain){
+   const history=$('#continueShelf',booksMain);
+   const action=$('#continueAction',history);
+   const title=$('#continueTitle',history);
+   const dock=$('.v9-explore-dock',booksMain);
+   if(history&&action&&title&&dock){
+     const button=document.createElement('button');
+     button.id='v97BooksResume';
+     button.type='button';
+     button.className='v97-books-resume';
+     button.hidden=true;
+     const prefix=document.createElement('span');
+     prefix.textContent='ПРОДОЛЖИТЬ ЧТЕНИЕ';
+     const name=document.createElement('strong');
+     const arrow=document.createElement('span');
+     arrow.textContent='↗';
+     arrow.setAttribute('aria-hidden','true');
+     button.append(prefix,name,arrow);
+     const render=()=>{
+       const available=!history.hidden && typeof action.onclick==='function';
+       button.hidden=!available;
+       if(!available)return;
+       const current=title.textContent?.trim()||'Последняя книга';
+       name.textContent=current;
+       button.setAttribute('aria-label','Продолжить чтение: '+current);
+     };
+     button.addEventListener('click',()=>{
+       if(history.hidden||typeof action.onclick!=='function')return;
+       action.click();
+     });
+     dock.insertAdjacentElement('afterend',button);
+     if(typeof MutationObserver==='function'){
+       const watcher=new MutationObserver(render);
+       watcher.observe(history,{attributes:true,attributeFilter:['hidden']});
+       watcher.observe(title,{childList:true,subtree:true,characterData:true});
+     }
+     window.addEventListener?.('focus',render);
+     render();
+   }
+ }
  const gameScreen=$('.screen[data-screen="play"]');
  const launcher=$('#v9ArcadeLauncher',gameScreen);
  const grid=$('.v9-arcade-launch-grid',launcher);
