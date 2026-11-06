@@ -1,0 +1,156 @@
+/* MARKET REMEMBERS V20 / EVIDENCE COMPARE
+   Additive layer over Crisis Atlas. No change to PEOPLE globe or shaders.
+   All "connections" are explicitly thematic; each case cites its own source. */
+#app.mh-v16[data-mh-mode="connections"] .mh-history-panel.is-expanded{
+  width:min(490px,38vw);
+}
+#app .mh-v20-compare{
+  display:grid;gap:16px;margin:16px 0 23px;padding:18px 0 22px;
+  border-top:1px solid rgba(233,177,199,.23);
+  border-bottom:1px solid rgba(233,177,199,.23);
+}
+#app .mh-v20-compare-heading{display:grid;gap:8px}
+#app .mh-v20-compare-heading>span{
+  color:#e2b2c6;font:750 9px/1.4 Inter,system-ui,sans-serif;
+  letter-spacing:.17em;
+}
+#app .mh-v20-compare-heading h3{
+  margin:0;color:#f8eff3;
+  font:500 clamp(22px,2.1vw,29px)/1.1 Georgia,"Times New Roman",serif;
+  letter-spacing:-.025em;text-wrap:balance;
+}
+#app .mh-v20-compare-heading p{
+  margin:0;color:#bbb5c3;font:400 11px/1.65 Inter,system-ui,sans-serif;
+}
+#app .mh-v20-compare-picker{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+}
+#app .mh-v20-compare-picker button{
+  min-height:44px;min-width:0;padding:8px 6px;border-radius:11px;
+  border:1px solid rgba(186,170,195,.28);
+  background:linear-gradient(140deg,rgba(31,31,48,.95),rgba(16,17,29,.96));
+  color:#ddd4df;font:750 12px/1.2 Inter,system-ui,sans-serif;
+  cursor:pointer;transition:background .18s,border-color .18s,transform .18s;
+}
+#app .mh-v20-compare-picker button:hover{
+  border-color:#d7a5bd;background:rgba(91,54,80,.75);
+}
+#app .mh-v20-compare-picker button.is-active{
+  border-color:rgba(246,194,219,.85);
+  background:linear-gradient(145deg,rgba(137,70,108,.75),rgba(72,43,75,.86));
+  color:#fff7fa;box-shadow:inset 0 1px rgba(255,230,244,.16);
+}
+#app .mh-v20-compare-picker button:focus-visible,
+#app .mh-v20-compare-case a:focus-visible{
+  outline:2px solid #ffe2ef;outline-offset:3px;
+}
+#app .mh-v20-compare-pair{
+  display:grid;grid-template-columns:1fr;gap:12px;
+}
+#app .mh-v20-compare-case{
+  position:relative;display:grid;align-content:start;gap:11px;
+  padding:18px 16px 16px;border:1px solid rgba(219,175,199,.26);
+  border-radius:16px;min-width:0;overflow:hidden;
+  background:
+    radial-gradient(ellipse at 95% 0%,rgba(168,99,143,.13),transparent 60%),
+    linear-gradient(160deg,rgba(34,31,48,.97),rgba(17,20,33,.96));
+  box-shadow:inset 0 1px rgba(249,221,236,.07),0 12px 25px rgba(0,0,0,.15);
+}
+#app .mh-v20-compare-case:nth-child(2){
+  background:
+    radial-gradient(ellipse at 95% 0%,rgba(122,142,185,.16),transparent 60%),
+    linear-gradient(160deg,rgba(30,33,52,.97),rgba(15,21,34,.97));
+}
+#app .mh-v20-compare-case-head{
+  display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  border-bottom:1px solid rgba(211,181,202,.19);padding-bottom:11px;
+}
+#app .mh-v20-compare-case-head span{
+  font:750 9px/1.4 Inter,system-ui,sans-serif;
+  color:#d8b4c9;letter-spacing:.15em;
+}
+#app .mh-v20-compare-case-head b{
+  color:#fff0f6;font:500 36px/.9 Georgia,serif;letter-spacing:-.06em;
+}
+#app .mh-v20-compare-case h4{
+  margin:0;color:#f8f0f3;
+  font:500 21px/1.17 Georgia,serif;letter-spacing:-.02em;text-wrap:balance;
+}
+#app .mh-v20-compare-case time{
+  color:#aeb0c1;font:650 9px/1.2 Inter,system-ui,sans-serif;letter-spacing:.08em;
+}
+#app .mh-v20-compare-fact,
+#app .mh-v20-compare-path,
+#app .mh-v20-compare-lesson{display:grid;gap:7px}
+#app .mh-v20-compare-case small{
+  color:#d5aec2;font:750 9px/1.4 Inter,system-ui,sans-serif;
+  letter-spacing:.085em;
+}
+#app .mh-v20-compare-case p{
+  margin:0;color:#e0dce5;font:400 11px/1.65 Inter,system-ui,sans-serif;
+}
+#app .mh-v20-compare-path ol{
+  display:grid;gap:6px;margin:0;padding:0;list-style:none;
+}
+#app .mh-v20-compare-path li{
+  display:flex;gap:9px;align-items:flex-start;
+  padding:8px 9px;border-radius:8px;background:rgba(221,175,201,.065);
+  border:1px solid rgba(225,174,198,.12);
+}
+#app .mh-v20-compare-path li span{
+  flex:none;color:#d9b0c4;font:750 9px/1.4 Inter,system-ui,sans-serif;
+}
+#app .mh-v20-compare-path li strong{
+  color:#f1e7ef;font:550 11px/1.42 Inter,system-ui,sans-serif;
+  overflow-wrap:anywhere;
+}
+#app .mh-v20-compare-lesson{
+  padding:11px 12px;border-left:2px solid rgba(220,167,198,.68);
+  background:rgba(141,76,111,.12);border-radius:0 9px 9px 0;
+}
+#app .mh-v20-compare-case>a{
+  display:block;padding-top:10px;border-top:1px solid rgba(211,181,202,.17);
+  color:#e8bdd2;text-decoration:underline;text-underline-offset:3px;
+  font:700 9px/1.5 Inter,system-ui,sans-serif;overflow-wrap:anywhere;
+}
+#app .mh-v20-compare-case>a:hover{color:#fff5f8}
+#app .mh-v20-compare-synthesis{
+  display:grid;gap:8px;padding:15px 14px;border-radius:13px;
+  border:1px solid rgba(167,193,214,.26);
+  background:linear-gradient(135deg,rgba(29,40,55,.83),rgba(22,25,42,.86));
+}
+#app .mh-v20-compare-synthesis h4{
+  margin:0 0 3px;color:#f4edf1;font:500 19px/1.2 Georgia,serif;
+}
+#app .mh-v20-compare-synthesis p{
+  margin:0;color:#d7d4df;font:450 11px/1.5 Inter,system-ui,sans-serif;
+}
+#app .mh-v20-compare-synthesis p b{color:#f2cddd;font-weight:750}
+#app .mh-v20-compare-synthesis small{
+  display:block;margin-top:5px;padding-top:10px;
+  border-top:1px solid rgba(184,191,211,.18);
+  color:#b6b5c6;font:400 10px/1.55 Inter,system-ui,sans-serif;
+}
+@media(min-width:1440px){
+  #app .mh-v20-compare-pair{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #app .mh-v20-compare-case{padding:14px 12px}
+  #app .mh-v20-compare-case h4{font-size:19px}
+}
+@media(max-width:819px){
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel.is-expanded{
+    left:10px;right:10px;top:auto;width:auto;
+  }
+  #app .mh-v20-compare{margin:13px 0 17px;padding:15px 0 19px;gap:12px}
+  #app .mh-v20-compare-heading h3{font-size:25px}
+  #app .mh-v20-compare-case{padding:15px 13px;gap:10px}
+  #app .mh-v20-compare-case h4{font-size:21px}
+  #app .mh-v20-compare-picker button{min-height:44px}
+}
+@media(max-width:819px) and (orientation:landscape) and (max-height:650px){
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel.is-expanded{
+    left:auto;right:12px;top:113px;bottom:15px;width:min(355px,47vw);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #app .mh-v20-compare-picker button{transition:none!important;transform:none!important}
+}
