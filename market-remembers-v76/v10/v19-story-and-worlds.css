@@ -1,0 +1,289 @@
+/* Market Remembers V19: story-first cinematic polish.
+   This layer preserves the original PEOPLE WebGL shader, star IDs,
+   archive/search, saved personal memories and V18 mirror geometry. */
+:root{--v19-ivory:#f3f0eb;--v19-muted:#b8c3cc;--v19-gold:#d8c0a0;--v19-outline:rgba(205,217,224,.22)}
+#app[data-mh-mode="people"] .selected-card{
+  border-color:rgba(171,210,228,.34);
+  background:linear-gradient(135deg,rgba(14,27,39,.88),rgba(8,14,25,.92));
+  box-shadow:0 20px 65px rgba(0,0,0,.32),inset 0 1px rgba(232,243,247,.07);
+  backdrop-filter:blur(18px);
+}
+#app[data-mh-mode="people"] .selected-card #selectedQuote{color:var(--v19-ivory);text-wrap:pretty}
+#app[data-mh-mode="people"] .selected-card #selectedBy{color:#cad2d4}
+#app[data-mh-mode="people"] .signal-dock{
+  background:linear-gradient(125deg,rgba(10,22,33,.95),rgba(8,14,25,.96));
+  border-color:rgba(178,214,226,.3);
+  box-shadow:0 16px 48px rgba(0,0,0,.5);
+}
+#app[data-mh-mode="people"] .signal-dock #dockQuote{color:#f4f2ed}
+
+/* A single 1.1s passage now aligns the optical progress with the reader handoff. */
+#app .memory-dive .memory-dive-progress span{animation-duration:1.1s}
+/* PEOPLE: the selected narrative takes priority over diagnostics and controls. */
+#app.obsidian .drawer.memory-detail.v10-reader{
+  background:
+    radial-gradient(ellipse 55% 28% at 50% 0%,rgba(58,98,114,.24),transparent 80%),
+    linear-gradient(175deg,#0e1823,#080e17 60%,#050910);
+  color:var(--v19-ivory);
+}
+#app.obsidian .drawer.memory-detail.v10-reader .drawer-head{
+  position:sticky;top:0;z-index:12;background:rgba(9,16,25,.88);
+  backdrop-filter:blur(18px);border-bottom:1px solid var(--v19-outline);
+  border-radius:0;padding:10px 2px 12px;
+}
+#app.obsidian .drawer.memory-detail.v10-reader .drawer-tag{color:#c3d3d5;letter-spacing:.14em}
+#app.obsidian .drawer.memory-detail.v10-reader .drawer-close{
+  border-color:rgba(223,228,235,.4);background:#172431;color:#fff;
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v12-memory-hero{
+  min-height:0;border:1px solid rgba(170,209,227,.24);
+  border-radius:24px;padding:clamp(24px,5vw,44px) clamp(18px,5vw,54px);
+  background:
+    radial-gradient(ellipse 55% 50% at 50% 22%,rgba(97,150,166,.24),transparent 82%),
+    radial-gradient(ellipse 75% 65% at 50% 115%,rgba(113,97,132,.15),transparent 90%),
+    linear-gradient(145deg,#122330,#0a1520 70%,#0b101a);
+  box-shadow:0 28px 72px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.05);
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v12-memory-sigil{
+  width:76px;height:76px;margin:16px auto 21px;
+  box-shadow:0 0 26px rgba(129,194,209,.28),0 0 85px rgba(77,123,148,.16),inset 0 0 17px rgba(210,239,246,.18);
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v12-memory-hero .memory-title{
+  font-size:clamp(30px,5vw,53px);line-height:1.11;
+  max-width:20ch;margin:12px auto 15px;color:#f6f2e8;
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v12-memory-hero .v10-story-abstract{
+  max-width:37ch;color:#e4e8e6;line-height:1.45;
+  font-size:clamp(20px,2.5vw,28px);margin-bottom:20px;
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v12-memory-hero .v113-story-overview{
+  border-top-color:rgba(211,223,228,.22);gap:8px 16px;
+}
+#app .v19-source-coverage{
+  max-width:48ch;margin:13px auto 0!important;padding:12px 15px;
+  border-left:2px solid rgba(210,180,144,.6);
+  background:rgba(226,217,203,.055);color:#c4c8cb;
+  font:400 12px/1.65 Inter,system-ui,sans-serif;text-align:left;
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v10-story-chapters{
+  display:grid;gap:15px;margin-top:12px;
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v10-chapter{
+  border:1px solid rgba(188,211,220,.17);border-radius:17px;
+  padding:clamp(20px,4vw,33px);background:linear-gradient(135deg,rgba(24,37,48,.82),rgba(11,19,29,.82));
+  box-shadow:inset 0 1px rgba(255,255,255,.035);
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v10-chapter h3{color:#f0e7da;text-wrap:balance}
+#app.obsidian .drawer.memory-detail.v10-reader .v10-chapter p{color:#d4dcdd;max-width:65ch}
+#app.obsidian .drawer.memory-detail.v10-reader .v113-chapter-progress,
+#app.obsidian .drawer.memory-detail.v10-reader .v10-chapter-nav{
+  border-color:var(--v19-outline);
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v12-story-actions{border-color:rgba(205,217,224,.18)}
+#app.obsidian .drawer.memory-detail.v10-reader .v12-story-actions button{
+  min-height:48px;transition:transform .2s ease,border-color .2s ease,background .2s ease;
+}
+#app.obsidian .drawer.memory-detail.v10-reader .v12-story-actions button:hover{transform:translateY(-2px)}
+#app.obsidian .drawer.memory-detail.v10-reader .v12-start-reading{
+  min-height:47px;border-radius:999px;letter-spacing:.045em;
+}
+
+/* EVENT CORE: selecting a date opens a quiet, legible teaser.
+   The full document is an explicit second action, not an involuntary overlay. */
+#app .mh-history-panel:not(.is-expanded) .mh-v19-preview{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden;margin:8px 0 0;
+  color:#c5bcd0;font:400 11px/1.5 Inter,system-ui,sans-serif;
+}
+#app .mh-history-panel.is-expanded .mh-v19-preview{display:none}
+#app .mh-v19-context{
+  display:grid;gap:10px;padding:18px 18px 15px;border-radius:14px;
+  border:1px solid rgba(213,180,217,.25);
+  background:radial-gradient(ellipse 80% 100% at 80% 0%,rgba(148,85,126,.17),transparent),
+             linear-gradient(145deg,rgba(36,31,51,.8),rgba(15,18,31,.94));
+}
+#app .mh-v19-context span{font:700 9px/1.5 Inter,system-ui,sans-serif;letter-spacing:.13em;color:#c6aecb}
+#app .mh-v19-context strong{font:500 clamp(21px,2.2vw,30px)/1.2 Georgia,serif;color:#fff4f8}
+#app .mh-v19-context p{margin:0;color:#e2dce5;font:400 12px/1.7 Inter,system-ui,sans-serif}
+#app .mh-v19-context small{color:#aeb5c9;font:400 10px/1.5 Inter,system-ui,sans-serif}
+#app .mh-v16-record{display:grid;gap:12px}
+#app .mh-v19-neighbors{
+  display:grid;grid-template-columns:minmax(75px,1fr) auto minmax(75px,1fr);
+  align-items:center;gap:8px;margin:9px 0;padding:9px 0;
+  border-top:1px solid rgba(187,174,205,.22);
+  border-bottom:1px solid rgba(187,174,205,.22);
+}
+#app .mh-v19-neighbors span{
+  color:#b6a8c0;text-align:center;letter-spacing:.05em;
+  font:650 8px/1.4 Inter,system-ui,sans-serif;
+}
+#app .mh-v19-neighbors button{
+  min-height:43px;border:1px solid rgba(181,166,200,.55);
+  background:rgba(67,53,87,.26);border-radius:10px;color:#f4e8f3;
+  font:700 11px Inter,system-ui,sans-serif;cursor:pointer;
+}
+#app .mh-v19-neighbors button:hover{background:rgba(126,88,124,.36)}
+#app .mh-v19-neighbors button:focus-visible{outline:2px solid #fae4f2;outline-offset:2px}
+
+/* Explicit canvas switching: HTML hidden must win over generic canvas rules. */
+#app .mh-planet-surface canvas[hidden]{display:none!important}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon-year{
+  border-color:rgba(219,187,221,.59);color:#f6edf7;
+  box-shadow:0 5px 20px rgba(1,3,11,.63);font-size:11px;
+}
+#app.mh-v16[data-mh-mode="events"] .mh-beacon.is-active .mh-beacon-year,
+#app.mh-v16[data-mh-mode="connections"] .mh-beacon.is-active .mh-beacon-year{
+  border-color:rgba(255,228,244,.93);box-shadow:0 0 21px rgba(206,137,190,.31);
+}
+#app.mh-v16[data-mh-mode="events"] .mh-planet-surface,
+#app.mh-v16[data-mh-mode="connections"] .mh-planet-surface{isolation:isolate}
+#app.mh-v16[data-mh-mode="events"] .mh-history-panel,
+#app.mh-v16[data-mh-mode="connections"] .mh-history-panel{
+  border-color:rgba(190,159,202,.43);
+  box-shadow:0 24px 80px rgba(0,0,0,.65),inset 0 1px rgba(245,231,251,.05);
+}
+@media(max-width:819px){
+  #app.obsidian .drawer.memory-detail.v10-reader{
+    position:fixed;inset:0;width:100vw;max-width:100vw;height:100dvh;
+    padding:calc(7px + env(safe-area-inset-top,0px)) 14px calc(28px + env(safe-area-inset-bottom,0px));
+  }
+  #app.obsidian .drawer.memory-detail.v10-reader .drawer-head{top:0;padding:10px 4px}
+  #app.obsidian .drawer.memory-detail.v10-reader .v12-memory-hero{
+    border-radius:17px;padding:19px 16px 21px;
+  }
+  #app.obsidian .drawer.memory-detail.v10-reader .v12-memory-sigil{
+    width:60px;height:60px;margin:12px auto 17px;
+  }
+  #app.obsidian .drawer.memory-detail.v10-reader .v12-memory-hero .memory-title{font-size:clamp(29px,8vw,39px)}
+  #app.obsidian .drawer.memory-detail.v10-reader .v12-memory-hero .v10-story-abstract{font-size:clamp(19px,5.3vw,23px)}
+  #app.obsidian .drawer.memory-detail.v10-reader .v10-chapter{padding:20px 17px}
+  #app .mh-v19-context{padding:14px}
+  #app.mh-v16[data-mh-mode="events"] .mh-history-panel:not(.is-expanded),
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel:not(.is-expanded){
+    padding:10px 13px 12px;
+    background:linear-gradient(140deg,rgba(21,23,39,.96),rgba(12,14,29,.98));
+  }
+  #app.mh-v16[data-mh-mode="events"] .mh-history-panel.is-expanded,
+  #app.mh-v16[data-mh-mode="connections"] .mh-history-panel.is-expanded{
+    max-height:min(65dvh,570px);overscroll-behavior:contain;
+  }
+  #app .mh-v19-neighbors{grid-template-columns:1fr 1fr}
+  #app .mh-v19-neighbors span{grid-column:1/-1;grid-row:1}
+}
+@media(max-width:370px){
+  #app .mh-v19-context strong{font-size:21px}
+  #app .mh-history-panel:not(.is-expanded) .mh-v19-preview{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+ #app.obsidian .drawer.memory-detail.v10-reader *,
+ #app .mh-v19-context,#app .mh-v19-neighbors button{
+   scroll-behavior:auto!important;animation:none!important;transition:none!important;
+ }
+}
+
+/* One explicit, source-conscious exit from a fictional human lesson into
+   researched financial history. This is not a personal participation claim. */
+#app .v19-history-bridge{
+  position:relative;display:grid;gap:10px;
+  padding:clamp(19px,3.5vw,27px);margin:24px 0 12px;
+  border:1px solid rgba(205,177,218,.30);border-radius:18px;
+  background:
+    radial-gradient(circle at 92% 18%,rgba(151,105,164,.19),transparent 43%),
+    linear-gradient(130deg,rgba(31,29,48,.95),rgba(12,18,31,.98));
+  box-shadow:inset 0 1px rgba(255,255,255,.055);
+}
+#app .v19-history-bridge .v19-bridge-kicker{
+  font:750 9px/1.5 Inter,system-ui,sans-serif;
+  letter-spacing:.13em;color:#d9b8d7;
+}
+#app .v19-history-bridge .v19-bridge-year{
+  font:500 clamp(44px,7vw,68px)/.95 Georgia,serif;
+  letter-spacing:-.055em;color:#f6e7f2;margin:6px 0 2px;
+}
+#app .v19-history-bridge h3{
+  font:500 clamp(21px,2.6vw,27px)/1.2 Georgia,serif;
+  color:#f8f0f2;margin:0;text-wrap:balance;
+}
+#app .v19-history-bridge p{
+  font:400 12px/1.65 Inter,system-ui,sans-serif;
+  color:#bfc3d0;max-width:57ch;margin:0;
+}
+#app .v19-history-bridge button{
+  margin-top:8px;display:flex;align-items:center;justify-content:center;
+  min-height:48px;width:100%;border-radius:11px;
+  border:1px solid rgba(209,167,207,.68);
+  background:linear-gradient(110deg,rgba(116,73,119,.61),rgba(54,44,77,.88));
+  color:#fff1f8;font:700 11px/1.4 Inter,system-ui,sans-serif;
+  cursor:pointer;transition:background .2s,transform .2s;
+}
+#app .v19-history-bridge button:hover{background:#704e79;transform:translateY(-1px)}
+#app .v19-history-bridge button:focus-visible{outline:2px solid #f9dce7;outline-offset:3px}
+@media(max-width:819px){
+  #app .v19-history-bridge{margin:18px 0 11px;padding:18px 17px;border-radius:15px}
+  #app .v19-history-bridge .v19-bridge-year{font-size:45px}
+}
+/* Restore standard focus and animation semantics in accessible reduced motion. */
+@media(prefers-reduced-motion:reduce){
+  #app .v19-history-bridge button{transition:none;transform:none}
+}
+
+/* EVENT: the restoring-centre control makes an empty manually rotated
+   hemisphere recoverable without forcing the entire sphere to auto-spin. */
+#app .mh-header-actions{display:flex;align-items:center;gap:9px;flex:none}
+#app .mh-header-actions #mhResetEventView{
+  border-color:rgba(192,165,220,.52);
+  background:rgba(28,24,43,.83);color:#ead7ed;
+  min-width:46px;
+}
+#app .mh-header-actions #mhResetEventView:hover{
+  border-color:#e5c5e4;background:#3b304b;color:#fff;
+}
+#app .mh-header-actions button:focus-visible{outline:2px solid #f4e2f7;outline-offset:3px}
+@media(max-width:819px){
+  #app .mh-header-actions{gap:6px}
+  #app .mh-header-actions button{
+    width:42px;min-width:42px;height:42px;min-height:42px;
+    padding:0!important;display:grid;place-items:center;
+    font-size:21px!important;
+  }
+  #app .mh-event-header .mh-event-brand{min-width:0;flex:1}
+  #app .mh-event-header .mh-event-brand strong{overflow-wrap:normal}
+}
+
+/* V20 foundation / Event Core: the causal path is visible before opening
+   the dossier. Three short, source-supplied mechanisms replace repetitive
+   paragraphs in the compact presentation. The PEOPLE world is untouched. */
+#app .mh-v20-impact-strip{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;
+  padding:0;margin:10px 0 2px;list-style:none;
+}
+#app .mh-v20-impact-strip li{
+  position:relative;min-width:0;min-height:62px;display:flex;
+  flex-direction:column;justify-content:center;gap:6px;
+  padding:10px 9px;border-radius:10px;
+  border:1px solid rgba(215,163,205,.22);
+  background:linear-gradient(150deg,rgba(105,49,81,.32),rgba(24,21,43,.83));
+  box-shadow:inset 0 1px rgba(255,234,247,.045);
+}
+#app .mh-v20-impact-strip li:not(:last-child):after{
+  content:'›';position:absolute;right:-7px;top:50%;
+  z-index:2;transform:translateY(-50%);
+  font:800 15px/1 Inter,system-ui,sans-serif;color:#e2b3d1;
+}
+#app .mh-v20-impact-strip li span{
+  font:750 9px/1 Inter,system-ui,sans-serif;
+  letter-spacing:.11em;color:#dcb4d8;
+}
+#app .mh-v20-impact-strip li strong{
+  font:550 10px/1.35 Inter,system-ui,sans-serif;
+  color:#f4eaf2;overflow-wrap:anywhere;
+}
+#app .mh-history-panel.is-expanded .mh-v20-impact-strip,
+#app[data-mh-mode="connections"] .mh-v20-impact-strip{display:none!important}
+@media(max-width:819px){
+  #app .mh-v20-impact-strip{gap:5px;margin:7px 0 1px}
+  #app .mh-v20-impact-strip li{min-height:57px;padding:7px 6px;border-radius:8px}
+  #app .mh-v20-impact-strip li strong{font-size:9px}
+  #app .mh-v20-impact-strip li span{font-size:8px}
+}

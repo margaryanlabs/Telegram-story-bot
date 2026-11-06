@@ -10,8 +10,8 @@ test('WebKit small phone, tablet and landscape composition',async({page})=>{
 });
 test('WebKit four chapters, scroll, keyboard trap and return',async({page})=>{
  await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/#story/1');
- await expect(page.locator('.v10-chapter')).toHaveCount(4);await page.locator('[data-v10-chapter="3"]').click();
- await expect(page.locator('[data-v10-chapter="3"]')).toHaveAttribute('aria-current','step');
+ await expect(page.locator('.v10-chapter')).toHaveCount(2);await page.locator('[data-v10-chapter="1"]').click();
+ await expect(page.locator('[data-v10-chapter="1"]')).toHaveAttribute('aria-current','step');
  for(let i=0;i<12;i++){await page.keyboard.press('Tab');expect(await page.locator('#drawer').evaluate(el=>el.contains(document.activeElement))).toBe(true);}
  await page.locator('.v93-back-to-star').click();await expect(page.locator('#drawer')).toBeHidden();await expect(page.locator('#dockAlias')).toContainText('NORTHSTAR');
 });

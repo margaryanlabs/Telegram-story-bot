@@ -16,21 +16,28 @@ const cosmos=document.createElement('div');cosmos.id='mhCrimsonCosmos';cosmos.cl
 cosmos.innerHTML='<div class="mh-crimson-nebula"></div><div class="mh-crimson-aureole"></div><span class="mh-crimson-orbit mh-crimson-orbit-one"></span><span class="mh-crimson-orbit mh-crimson-orbit-two"></span><div class="mh-crimson-vignette"></div>';
 stage.append(cosmos,wrapper);
 const header=document.createElement('header');header.id='mhEventHeader';header.className='mh-event-header';header.hidden=true;
-header.innerHTML='<div class="mh-event-brand"><span class="mh-event-sigil" aria-hidden="true">✦</span><div><strong>THE MARKET <em>REMEMBERS</em></strong><small>FINANCIAL HISTORY · EVENT UNIVERSE</small></div></div><button type="button" id="mhBackToPeople">↖ <span>PEOPLE UNIVERSE</span></button>';
+header.innerHTML='<div class="mh-event-brand"><span class="mh-event-sigil" aria-hidden="true">✦</span><div><strong>THE MARKET <em>REMEMBERS</em></strong><small>FINANCIAL HISTORY · EVENT UNIVERSE</small></div></div><nav class="mh-header-actions" aria-label="Управление миром событий"><button type="button" id="mhResetEventView" aria-label="Вернуть исторические метки на глобус" title="Вернуть исторические метки">⟳ <span>ЦЕНТР</span></button><button type="button" id="mhBackToPeople">↖ <span>PEOPLE UNIVERSE</span></button></nav>';
 app.append(header);
 $('mhBackToPeople').addEventListener('click',()=>window.MarketHistoryModes?.setMode('people'));
+$('mhResetEventView').addEventListener('click',()=>resetView());
 const veil=document.createElement('div');veil.id='mhWorldVeil';veil.className='mh-world-veil';veil.setAttribute('aria-hidden','true');app.append(veil);
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const source=window.MHPeopleMirrorShaders;
 const twoPi=Math.PI*2;
-let gl=null,ctx=null,programCore=null,programPoints=null,programLines=null;
+let gl=null,ctx=null,programCore=null,programPoints=null,programLines=null,rendererInitialized=false;
 let vertexBuffer=null,indexBuffer=null,particleBuffer=null,lineBuffer=null,indexCount=0,pointCount=0,lineCount=0;
-let w=1,h=1,dpr=1,planet={x:0,y:0,r:160},active=false,frame=0,last=0,lastMeasure=0,zoom=1;
+let w=1,h=1,dpr=1,planet={x:0,y:0,r:160},active=false,frame=0,idleTimer=0,last=0,lastMeasure=0,zoom=1;
 let yaw=0,pitch=.04,targetYaw=0,targetPitch=.04,focusUntil=0,selected=[-.14,.11,.984],pulseUntil=0,pointer=null;
 let uniformCache=new WeakMap(),dragged=false,contextLost=false;
+const activePointers=new Map();let pinchDistance=0;
 const activeMode=()=>['events','connections'].includes(app.dataset.mhMode);
 const events=()=>window.MarketHistoryModes?.events||[];
 const point3=p=>[p[0],p[1],Math.sqrt(Math.max(0,1-p[0]*p[0]-p[1]*p[1]))];
+const fallbackDust=Array.from({length:360},(_,i)=>{
+ const y=1-2*(i+.5)/360,angle=i*2.399963229728653;
+ const radius=Math.sqrt(Math.max(0,1-y*y));
+ return [radius*Math.cos(angle),y,radius*Math.sin(angle)];
+});
 function seeded(seed){let v=seed>>>0;return ()=>{v^=v<<13;v^=v>>>17;v^=v<<5;return(v>>>0)/4294967296;};}
 function precision(type,text){
  const s=gl.createShader(type);gl.shaderSource(s,text);gl.compileShader(s);
@@ -184,22 +191,48 @@ function webGLRender(t){
 }
 function canvasRender(){
  if(!ctx)return;
- const {x,y,r}=planet;ctx.clearRect(0,0,w,h);
- const stone=ctx.createRadialGradient(x-r*.24,y-r*.25,r*.04,x,y,r);
- stone.addColorStop(0,'#4f3855');stone.addColorStop(.40,'#261d39');stone.addColorStop(.76,'#101424');stone.addColorStop(1,'#060811');
- ctx.save();ctx.fillStyle=stone;ctx.beginPath();ctx.arc(x,y,r,0,twoPi);ctx.fill();ctx.clip();
- const gas=ctx.createLinearGradient(x-r*.6,y+r*.7,x+r*.6,y-r*.75);
- gas.addColorStop(0,'rgba(105,62,133,0)');gas.addColorStop(.45,'rgba(192,113,168,.12)');
- gas.addColorStop(.65,'rgba(175,143,207,.15)');gas.addColorStop(1,'rgba(101,64,119,0)');
- ctx.fillStyle=gas;ctx.fillRect(x-r,y-r,r*2,r*2);
- const rnd=seeded(271828);
- for(let i=0;i<390;i++){
-  const a=rnd()*twoPi,rr=Math.sqrt(rnd())*r*.96,px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;
-  ctx.fillStyle=i%4?'rgba(199,181,225,.25)':'rgba(231,164,196,.38)';
-  ctx.beginPath();ctx.arc(px,py,i%9===0?1:.6,0,twoPi);ctx.fill();
+ const {x,y}=planet,r=planet.r*zoom;
+ ctx.clearRect(0,0,w,h);
+ // A true projected front hemisphere replaces the old stationary 2D dust disc.
+ // The same yaw/pitch used for historical beacons now moves the visual stars.
+ const stone=ctx.createRadialGradient(x-r*.26,y-r*.32,r*.02,x,y,r);
+ stone.addColorStop(0,'#594761');
+ stone.addColorStop(.33,'#312b46');
+ stone.addColorStop(.69,'#171c34');
+ stone.addColorStop(1,'#060811');
+ ctx.save();
+ ctx.beginPath();ctx.arc(x,y,r,0,twoPi);ctx.clip();
+ ctx.fillStyle=stone;ctx.fillRect(x-r,y-r,r*2,r*2);
+ const sheen=ctx.createLinearGradient(x-r*.87,y-r*.72,x+r*.64,y+r*.8);
+ sheen.addColorStop(0,'rgba(227,187,235,.18)');
+ sheen.addColorStop(.48,'rgba(127,104,180,.025)');
+ sheen.addColorStop(1,'rgba(15,19,37,.19)');
+ ctx.fillStyle=sheen;ctx.fillRect(x-r,y-r,r*2,r*2);
+ for(let i=0;i<fallbackDust.length;i++){
+  const p=rotate(fallbackDust[i]);
+  if(p[2]<=.04)continue; // Never render stars through the back of the globe.
+  const xx=x+p[0]*r*.94,yy=y-p[1]*r*.94;
+  if((xx-x)*(xx-x)+(yy-y)*(yy-y)>r*r*.94)continue;
+  const size=i%21===0?1.2:.5+p[2]*.43;
+  const alpha=(.14+p[2]*.42)*(i%19===0?1.35:1);
+  ctx.globalAlpha=clamp(alpha,.1,.86);
+  ctx.fillStyle=i%9===0?'#e8c6df':'#cfc2ed';
+  ctx.beginPath();ctx.arc(xx,yy,size,0,twoPi);ctx.fill();
  }
+ ctx.globalAlpha=1;
+ // A light-catching latitude arc follows the physical orientation.
+ ctx.strokeStyle='rgba(198,170,222,.16)';ctx.lineWidth=.8;
+ ctx.save();ctx.translate(x,y);ctx.rotate(yaw*.18);ctx.scale(1,.34);
+ ctx.beginPath();ctx.arc(0,0,r*.79,0,twoPi);ctx.stroke();ctx.restore();
  ctx.restore();
- ctx.strokeStyle='rgba(171,148,207,.38)';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(x,y,r,0,twoPi);ctx.stroke();
+ ctx.beginPath();ctx.arc(x,y,r,0,twoPi);
+ ctx.strokeStyle='rgba(209,189,229,.44)';ctx.lineWidth=1.15;ctx.stroke();
+ const rim=ctx.createRadialGradient(x-r*.27,y-r*.35,r*.6,x,y,r*1.08);
+ rim.addColorStop(0,'rgba(169,124,199,0)');
+ rim.addColorStop(.87,'rgba(169,124,199,0)');
+ rim.addColorStop(1,'rgba(195,171,223,.18)');
+ ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,twoPi);ctx.clip();
+ ctx.fillStyle=rim;ctx.fillRect(x-r,y-r,2*r,2*r);ctx.restore();
 }
 function rotate(pair){
  const [px,py,pz]=point3(pair),cy=Math.cos(yaw),sy=Math.sin(yaw),cx=Math.cos(pitch),sx=Math.sin(pitch);
@@ -214,11 +247,27 @@ function focus(pair){
  const p=point3(pair);targetYaw=-Math.atan2(p[0],p[2]);targetPitch=Math.atan2(p[1],Math.hypot(p[0],p[2]));
  focusUntil=performance.now()+3500;pulseUntil=performance.now()+650;request();
 }
+function resetView(){
+ zoom=1;
+ const current=events().find(item=>item.id===window.MarketHistoryModes?.activeEvent);
+ if(current)focus(current.p);
+ else {targetYaw=0;targetPitch=.04;request();}
+}
 function tick(t){
  frame=0;if(!active||document.hidden)return;
+ const elapsed=last?t-last:16;
+ const moving=!!pointer||activePointers.size>0||t<focusUntil||t<pulseUntil||
+   Math.abs(yaw-targetYaw)>.003||Math.abs(pitch-targetPitch)>.003;
+ // Inactive input: sleep between frames instead of scheduling 60 RAF
+ // callbacks that each reject drawing. Interactions wake us immediately.
+ const budget=moving?33:82;
+ if(last&&!reduce&&elapsed<budget){
+   if(moving)scheduleNext(budget-elapsed);
+   else scheduleIdle(budget-elapsed);
+   return;
+ }
  size();place();
- const dt=last?Math.min(60,t-last):16;
- if(last&&!reduce&&dt<30){request();return;}last=t;
+ const dt=last?Math.min(82,elapsed):16;last=t;
  // PEOPLE-style celestial object, not an endlessly rotating showcase:
  // all four source events occupy one archive-facing hemisphere, so idle
  // auto-spin would move every date behind the planet and leave it empty.
@@ -227,17 +276,38 @@ function tick(t){
  const ease=reduce?1:1-Math.exp(-dt/245);
  yaw+=(targetYaw-yaw)*ease;pitch+=(targetPitch-pitch)*ease;
  try{if(gl)webGLRender(t);else canvasRender();}catch(e){failToCanvas(e);canvasRender();}
- if(t-lastMeasure>66){window.MarketHistoryModes?.measure();lastMeasure=t;}
- if(!reduce)request();
+ // Reduced-motion users get one frame per gesture. Projected date controls
+ // must move on that same frame instead of waiting for an animation tick.
+ if(reduce||t-lastMeasure>66){window.MarketHistoryModes?.measure();lastMeasure=t;}
+ if(!reduce){
+   if(moving)scheduleNext(33);
+   else scheduleIdle(82);
+ }
 }
-function request(){if(active&&!frame&&!document.hidden)frame=requestAnimationFrame(tick);}
+function scheduleIdle(ms=82){
+ if(!active||document.hidden||idleTimer)return;
+ idleTimer=window.setTimeout(()=>{idleTimer=0;request();},Math.max(8,Math.ceil(ms)));
+}
+function scheduleNext(ms=33){
+ if(!active||document.hidden||idleTimer)return;
+ idleTimer=window.setTimeout(()=>{idleTimer=0;request();},Math.max(8,Math.ceil(ms)));
+}
+function request(){
+ if(!active||document.hidden)return;
+ if(idleTimer){window.clearTimeout(idleTimer);idleTimer=0;}
+ if(!frame)frame=requestAnimationFrame(tick);
+}
 function setActive(next){
  active=!!next;header.hidden=!active;wrapper.hidden=!active;cosmos.hidden=!active;
  if(!active){
+  activePointers.clear();pinchDistance=0;pointer=null;
+  if(idleTimer)window.clearTimeout(idleTimer);idleTimer=0;
   if(frame)cancelAnimationFrame(frame);frame=0;last=0;
   window.MarketPeopleResume?.();
  }else{
   size();place();last=0;
+  // Do not allocate a second WebGL context until EVENT CORE is actually opened.
+  if(!rendererInitialized){rendererInitialized=true;initGL();}
   const cur=events().find(e=>e.id===window.MarketHistoryModes?.activeEvent);
   if(cur)focus(cur.p);
   request();
@@ -245,30 +315,73 @@ function setActive(next){
 }
 wrapper.addEventListener('pointerdown',e=>{
  if(!active||e.button>0)return;
- e.stopPropagation();e.preventDefault();pointer={id:e.pointerId,x:e.clientX,y:e.clientY};
+ e.stopPropagation();e.preventDefault();
+ activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(activePointers.size===1){pointer={id:e.pointerId,x:e.clientX,y:e.clientY};pinchDistance=0;}
+ else {
+  pointer=null;
+  // Initialize a baseline on the second finger down. The first pinch
+  // movement must zoom rather than being silently discarded.
+  const [a,b]=[...activePointers.values()];
+  pinchDistance=Math.hypot(a.x-b.x,a.y-b.y);
+ }
  wrapper.setPointerCapture?.(e.pointerId);
 });
 wrapper.addEventListener('pointermove',e=>{
- if(!pointer||e.pointerId!==pointer.id)return;
+ if(!activePointers.has(e.pointerId))return;
  e.stopPropagation();e.preventDefault();
- const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;pointer.x=e.clientX;pointer.y=e.clientY;
+ const previous=activePointers.get(e.pointerId);
+ activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(activePointers.size>=2){
+  const [a,b]=[...activePointers.values()];
+  const distance=Math.hypot(a.x-b.x,a.y-b.y);
+  if(pinchDistance>0)zoom=clamp(zoom+(distance-pinchDistance)*.0016,.82,1.30);
+  pinchDistance=distance;focusUntil=performance.now()+1000;request();
+  return;
+ }
+ if(!pointer||pointer.id!==e.pointerId){
+  pointer={id:e.pointerId,x:e.clientX,y:e.clientY};
+  return;
+ }
+ const dx=e.clientX-previous.x,dy=e.clientY-previous.y;
  targetYaw+=dx*.006;targetPitch=clamp(targetPitch+dy*.0045,-1.1,1.1);
- focusUntil=performance.now()+3000;if(reduce)request();
+ focusUntil=performance.now()+3000;request();
 });
 for(const type of ['pointerup','pointercancel','lostpointercapture'])wrapper.addEventListener(type,e=>{
- if(!pointer||pointer.id!==e.pointerId)return;pointer=null;
+ if(!activePointers.has(e.pointerId))return;
+ activePointers.delete(e.pointerId);
+ pinchDistance=0;pointer=null;
+ if(activePointers.size===1){
+  const [id,point]=activePointers.entries().next().value;
+  pointer={id,x:point.x,y:point.y};
+ }
+ request();
 });
 wrapper.addEventListener('wheel',e=>{
  if(!active)return;e.stopPropagation();e.preventDefault();
  zoom=clamp(zoom+(e.deltaY>0?-.055:.055),.84,1.15);request();
 },{passive:false});
 mainCanvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;failToCanvas('context lost');if(active)request();});
-mainCanvas.addEventListener('webglcontextrestored',()=>{contextLost=false;initGL();size();if(active)request();});
-window.addEventListener('resize',()=>{size();place();if(active)request();},{passive:true});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&frame){cancelAnimationFrame(frame);frame=0;}else if(active)request();});
-size();initGL();size();place();
+mainCanvas.addEventListener('webglcontextrestored',()=>{
+ contextLost=false;
+ // Don't rebuild a hidden GPU context. PEOPLE may still own the foreground GPU.
+ if(!active){rendererInitialized=false;return;}
+ initGL();size();request();
+});
+window.addEventListener('resize',()=>{
+ // Restoring EVENT calls size/place when it is opened again.
+ if(!active)return;
+ size();place();request();
+},{passive:true});
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){
+   if(frame)cancelAnimationFrame(frame);frame=0;
+   if(idleTimer)window.clearTimeout(idleTimer);idleTimer=0;
+ }else if(active)request();
+});
+size();place();
 window.MarketEventPlanet=Object.freeze({
- setActive,project,focus,
+ setActive,project,focus,resetView,
  get active(){return active;},
  get renderer(){return gl?'webgl1':ctx?'canvas2d':'unavailable';},
  get copiedPeopleRenderer(){return true;}

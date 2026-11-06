@@ -1,6 +1,6 @@
 window.MarketV10 = window.MarketV10 || {};
 window.MarketV10.reader = (() => {
-  let sections=[],buttons=[],scrollFrame=0,progress=null;
+  let sections=[],buttons=[],chapterLabels=[],scrollFrame=0,progress=null;
   function update() {
     scrollFrame=0;
     const drawer=document.getElementById('drawer');
@@ -13,11 +13,11 @@ window.MarketV10.reader = (() => {
       const bar=progress.querySelector('.v113-progress-fill');
       const label=progress.querySelector('.v113-progress-label');
       if(bar)bar.style.width=((current+1)/sections.length*100).toFixed(1)+'%';
-      if(label)label.textContent='ГЛАВА '+String(current+1).padStart(2,'0')+' / '+String(sections.length).padStart(2,'0')+' · '+window.MarketV10.data.labels[current];
+      if(label)label.textContent='ЧАСТЬ '+String(current+1).padStart(2,'0')+' / '+String(sections.length).padStart(2,'0')+' · '+(chapterLabels[current]||'История');
       progress.setAttribute('aria-valuenow',String(current+1));
     }
     const stage=drawer.querySelector('.v93-reader-stage');
-    if(stage)stage.textContent='0'+(current+1)+' / '+window.MarketV10.data.labels[current].toUpperCase();
+    if(stage)stage.textContent='0'+(current+1)+' / '+(chapterLabels[current]||'ИСТОРИЯ').toUpperCase();
   }
   function init() {
     document.getElementById('drawer').addEventListener('scroll',()=>{
@@ -36,7 +36,7 @@ window.MarketV10.reader = (() => {
     window.MarketV10.motion.reveal(section);
   }
   function mount(record,api) {
-    sections=[];buttons=[];progress=null;
+    sections=[];buttons=[];chapterLabels=[];progress=null;
     const drawer=document.getElementById('drawer');
     const article=drawer.querySelector('.memory-experience');
     if(!article)return;
@@ -52,14 +52,25 @@ window.MarketV10.reader = (() => {
       const tag=document.createElement('span');tag.className='v113-story-provenance';
       tag.textContent=window.MarketV10.data.provenance(record);
       const context=document.createElement('p');context.className='v113-story-context';
+      const allChapters=window.MarketV10.data.chapters(record);
+      const availableChapters=allChapters.filter(chapter=>!chapter.missing).map(chapter=>{
+        if(chapter.legacy)return {...chapter,label:'Исходная история',english:'Original account'};
+        if(chapter.key==='remains'&&!record.chapters?.remains)
+          return {...chapter,label:'Практическое правило',english:'Practical lesson'};
+        return chapter;
+      });
+      const missingChapters=allChapters.filter(chapter=>chapter.missing);
       const category=window.MarketV10.data.themes[record.category]||String(record.category||'Опыт');
-      context.textContent=[category,String(record.market||'').trim()].filter(Boolean).join(' · ')+' / Четыре главы. Отсутствующие детали не выдуманы.';
+      const coverage=missingChapters.length
+        ?('Краткая запись: '+availableChapters.length+' из 4 этапов описаны. Отсутствующие детали не выдуманы.')
+        :'Полная история · все 4 этапа описаны.';
+      context.textContent=[category,String(record.market||'').trim(),coverage].filter(Boolean).join(' · ');
       overview.append(tag,context);
       progress=document.createElement('div');progress.className='v113-chapter-progress';
       progress.setAttribute('role','progressbar');progress.setAttribute('aria-label','Прогресс чтения по главам');
-      progress.setAttribute('aria-valuemin','1');progress.setAttribute('aria-valuemax','4');progress.setAttribute('aria-valuenow','1');
+      progress.setAttribute('aria-valuemin','1');progress.setAttribute('aria-valuemax',String(availableChapters.length||1));progress.setAttribute('aria-valuenow','1');
       const progressLabel=document.createElement('span');progressLabel.className='v113-progress-label';
-      progressLabel.textContent='ГЛАВА 01 / 04 · До решения';
+      progressLabel.textContent='ЧАСТЬ 01 / '+String(availableChapters.length).padStart(2,'0')+' · '+(availableChapters[0]?.label||'История');
       const track=document.createElement('span');track.className='v113-progress-track';track.setAttribute('aria-hidden','true');
       const fill=document.createElement('span');fill.className='v113-progress-fill';track.append(fill);
       progress.append(progressLabel,track);
@@ -69,7 +80,8 @@ window.MarketV10.reader = (() => {
       article.querySelectorAll('.human-journey-step,.memory-section').forEach(el=>el.remove());
       const nav=document.createElement('nav');nav.className='v10-chapter-nav';nav.setAttribute('aria-label','Главы истории');
       const container=document.createElement('div');container.className='v10-story-chapters';
-      window.MarketV10.data.chapters(record).forEach((chapter,i)=>{
+      availableChapters.forEach((chapter,i)=>{
+        chapterLabels.push(chapter.label);
         const section=document.createElement('section');section.className='v10-chapter';section.id='v10-chapter-'+chapter.key;
         section.dataset.chapter=chapter.key;section.tabIndex=-1;
         const eyebrow=document.createElement('span');eyebrow.className='v10-eyebrow';eyebrow.textContent='CHAPTER '+chapter.number+' / '+chapter.english.toUpperCase();
@@ -79,10 +91,10 @@ window.MarketV10.reader = (() => {
         section.append(eyebrow,heading);
         if(chapter.legacy){const note=document.createElement('small');note.className='v10-source-note';note.textContent='Исходная история сохранена целиком; автор не разделял её на этапы.';section.append(note);}
         section.append(copy);
-        if(i<3){
+        if(i<availableChapters.length-1){
           const next=document.createElement('button');next.type='button';next.className='v113-next-chapter';
-          next.textContent='Продолжить · '+window.MarketV10.data.labels[i+1]+' →';
-          next.setAttribute('aria-label','Перейти к главе '+(i+2)+': '+window.MarketV10.data.labels[i+1]);
+          next.textContent='Продолжить · '+availableChapters[i+1].label+' →';
+          next.setAttribute('aria-label','Перейти к части '+(i+2)+': '+availableChapters[i+1].label);
           next.onclick=()=>jumpToChapter(i+1);
           section.append(next);
         }
@@ -108,11 +120,16 @@ window.MarketV10.reader = (() => {
       const starLabel=document.createElement('span');starLabel.className='v12-memory-caption';
       starLabel.textContent='ЗВЕЗДА · '+category.toUpperCase();
       hero.append(heroEyebrow,halo,starLabel,title,abstract,overview);
+      if(missingChapters.length){
+        const truth=document.createElement('p');truth.className='v19-source-coverage';
+        truth.textContent='Эта запись представлена в сокращённом виде. Полная последовательность решения и последствий в исходной истории не указана.';
+        hero.append(truth);
+      }
       const firstChapter=sections[0];
       if(firstChapter){
         const start=document.createElement('button');
         start.type='button';start.className='v12-start-reading';
-        start.textContent='Читать историю ↓';
+        start.textContent=availableChapters.length>2?'Открыть главы истории ↓':'Читать короткую историю ↓';
         start.setAttribute('aria-controls',firstChapter.id);
         start.onclick=()=>jumpToChapter(0);
         hero.append(start);
@@ -197,6 +214,27 @@ window.MarketV10.reader = (() => {
     }
     const ending=article.querySelector('.v113-story-ending');
     if(ending)ending.after(actions);else article.append(actions);
+    // A PEOPLE story can lead into a genuine historical parallel without
+    // presenting an invented character as a participant in that event.
+    const parallelYear={Risk:'2008',Discipline:'1987',FOMO:'2020',Patience:'1907'}[record.category];
+    const parallel=window.MarketHistoryModes?.events.find(event=>event.id===parallelYear);
+    if(!record.local && record.type!=='legend' && parallel && typeof api.toEvent==='function'){
+      const bridge=document.createElement('section');bridge.className='v19-history-bridge';
+      bridge.setAttribute('aria-label','Историческая параллель');
+      const kicker=document.createElement('span');kicker.className='v19-bridge-kicker';
+      kicker.textContent='PEOPLE × EVENT CORE / ИСТОРИЧЕСКАЯ ПАРАЛЛЕЛЬ';
+      const year=document.createElement('strong');year.className='v19-bridge-year';
+      year.textContent=parallel.year;
+      const head=document.createElement('h3');head.textContent=parallel.name;
+      const note=document.createElement('p');
+      note.textContent='Похожая тема риска или поведения рынка. Это тематическая аналогия, а не свидетельство участия героя в историческом событии.';
+      const action=document.createElement('button');action.type='button';
+      action.textContent='Исследовать событие →';
+      action.setAttribute('aria-label','Перейти в EVENT CORE: '+parallel.name);
+      action.onclick=()=>api.toEvent(parallel.id);
+      bridge.append(kicker,year,head,note,action);
+      actions.before(bridge);
+    }
     if(record.local){
       const privacy=document.createElement('p');privacy.className='v10-quiet v12-private-note';
       privacy.textContent='Стабильный ID: '+record.id+'. Ссылка не переносит историю на другое устройство; для переноса используй экспорт JSON.';

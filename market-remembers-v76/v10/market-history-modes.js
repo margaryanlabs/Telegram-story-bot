@@ -91,12 +91,15 @@
   scene.append(layer);
   main.append(switcher, intro, panel);
 
-  function updateUrl() {
+  function updateUrl(method = 'replace') {
     try {
       const url = new URL(window.location.href);
       if (state.mode === 'people') { url.searchParams.delete('mm'); url.searchParams.delete('event'); }
       else { url.searchParams.set('mm', state.mode); url.searchParams.set('event', state.activeEvent); }
-      history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+      // World changes are navigable with Android/system Back; individual year
+      // focus updates avoid flooding the history stack with every star tap.
+      const operation=method==='push'?'pushState':'replaceState';
+      history[operation](history.state, '', url.pathname + url.search + url.hash);
     } catch (_) { /* URL state is optional; content remains usable. */ }
   }
   function timeline() {
@@ -111,13 +114,24 @@
       '</span><small>Истории этой темы ↗</small></button>').join('') + '</div>';
   }
   function eventMarkup(event) {
+    const sourceIndex=EVENTS.findIndex(item=>item.id===event.id);
+    const before=EVENTS[(sourceIndex-1+EVENTS.length)%EVENTS.length];
+    const after=EVENTS[(sourceIndex+1)%EVENTS.length];
     const steps=event.mechanism.split('→').map((part,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
     return '<div class="mh-v16-record">' +
+      '<div class="mh-v19-context"><span>АРХИВ ФИНАНСОВОЙ ИСТОРИИ / '+escape(event.year)+'</span>'+
+      '<strong>'+escape(event.short)+'</strong>'+
+      '<p>'+escape(event.mechanism)+'</p>'+
+      '<small>Документированное событие · позиция метки на сфере символическая</small></div>' +
       '<div class="mh-v16-record-meta"><span>◈ VERIFIED CHRONICLE</span><time>'+escape(event.date)+'</time></div>' +
       '<div class="mh-v16-record-title"><span class="mh-v16-record-year">'+escape(event.year)+'</span><h2>'+escape(event.name)+'</h2></div>' +
       '<section class="mh-v16-research-card mh-v16-context"><div class="mh-v16-card-icon">01</div><div><h3>ЧТО ПРОИЗОШЛО</h3><p>'+escape(event.detail)+'</p></div></section>' +
       '<section class="mh-v16-research-card mh-v16-transmission"><div class="mh-v16-card-icon">02</div><div><h3>МЕХАНИЗМ ШОКА</h3><ol class="mh-v16-steps">'+steps+'</ol></div></section>' +
       '<section class="mh-v16-research-card mh-v16-lesson"><div class="mh-v16-card-icon">03</div><div><h3>УРОК ДЛЯ ТРЕЙДЕРА</h3><p>'+escape(event.lesson)+'</p></div></section>' +
+      '<div class="mh-v19-neighbors" role="group" aria-label="Другие исторические события">'+
+      '<button type="button" data-mh-event="'+before.id+'" aria-label="Предыдущее событие: '+escape(before.name)+'">← '+escape(before.year)+'</button>'+
+      '<span>ИССЛЕДОВАТЬ ДРУГОЙ ГОД</span>'+
+      '<button type="button" data-mh-event="'+after.id+'" aria-label="Следующее событие: '+escape(after.name)+'">'+escape(after.year)+' →</button></div>' +
       '<div class="mh-v16-card-footer"><button type="button" data-mh-go-connections>ИССЛЕДОВАТЬ СВЯЗИ <span aria-hidden="true">↗</span></button>' +
       '<a href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer">ПЕРВОИСТОЧНИК · '+escape(event.source)+' ↗</a></div></div>';
   }
@@ -138,7 +152,13 @@
     const event = EVENT_BY_ID[state.activeEvent];
     panel.classList.toggle('is-expanded',panelExpanded);
     window.MarketSignalDirector?.setEvent(event);
+    // The selected crisis has a readable mechanism even without opening the
+    // research dossier: show source-supplied stages, never inferred trade data.
+    const impact=event.mechanism.split('→').map((part,i)=>
+      '<li><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
     panel.innerHTML = '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':'ПОДРОБНЕЕ ↑')+'</em></button>' +
+      '<p class="mh-v19-preview" aria-label="Краткий контекст">'+escape(event.short)+' · '+escape(event.date)+'</p>' +
+      '<ol class="mh-v20-impact-strip" aria-label="Схема механизма кризиса">'+impact+'</ol>' +
       '<div class="mh-panel-top"><span>◈ EVENT CORE / RESEARCH</span><span>04 / SOURCED EVENTS</span></div>' +
       '<nav class="mh-core-tabs" aria-label="Исследование истории"><button type="button" data-mh-mode="events" aria-pressed="'+(state.mode === 'events')+'" class="'+(state.mode === 'events'?'is-active':'')+'">СОБЫТИЯ</button><button type="button" data-mh-mode="connections" aria-pressed="'+(state.mode === 'connections')+'" class="'+(state.mode === 'connections'?'is-active':'')+'">СВЯЗИ</button></nav>' +
       timeline() + '<div class="mh-panel-body">' + (state.mode === 'connections' ? connectionMarkup(event) : eventMarkup(event)) + '</div>' +
@@ -235,14 +255,27 @@
       renderBeacons();
     }
     window.MarketEventPlanet?.setActive(mode !== 'people');
-    if (update) updateUrl();
+    if (update) updateUrl(oldMode!==mode?'push':'replace');
   }
   function selectEvent(id) {
     if (!EVENT_BY_ID[id]) return;
+    const origin=document.activeElement;
+    const fromTimeline=!!origin?.closest?.('.mh-timeline [data-mh-event],.mh-v19-neighbors [data-mh-event]');
+    const fromBeacon=!!origin?.closest?.('[data-mh-beacon]');
     state.activeEvent = id;
-    panelExpanded = true;
+    // Selecting a year must not immediately cover the sphere with a dossier.
+    // The visitor explicitly expands "Подробнее" when ready to read.
+    panelExpanded = false;
     renderPanel();
+    panel.scrollTop=0;
     renderBeacons();
+    // Re-rendering the panel replaces buttons: retain focus for keyboard users.
+    if(fromTimeline){
+      const target=window.matchMedia('(max-width:819px)').matches
+        ?panel.querySelector('.mh-timeline [data-mh-event="'+id+'"]')
+        :panel.querySelector('.mh-panel-grip');
+      target?.focus({preventScroll:true});
+    }else if(fromBeacon)layer.querySelector('[data-mh-beacon="'+id+'"]')?.focus({preventScroll:true});
     window.MarketEventPlanet?.focus(EVENT_BY_ID[id].p);
     window.MarketSignalDirector?.setEvent(EVENT_BY_ID[id]);
     updateUrl();
@@ -263,6 +296,22 @@
       if (event.target instanceof Element && event.target.closest('[data-mh-beacon]')) event.stopPropagation();
     });
   }
+  panel.addEventListener('keydown', event => {
+    // Escape closes the research document without navigating away from the world.
+    if(event.key==='Escape'&&panelExpanded){
+      event.preventDefault();event.stopPropagation();
+      panelExpanded=false;renderPanel();panel.scrollTop=0;
+      panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
+      window.requestAnimationFrame(measure);
+      return;
+    }
+    const dateButton=event.target instanceof Element?event.target.closest('.mh-timeline [data-mh-event]'):null;
+    if(!dateButton||!['ArrowLeft','ArrowRight'].includes(event.key))return;
+    event.preventDefault();
+    const index=EVENTS.findIndex(item=>item.id===dateButton.dataset.mhEvent);
+    const direction=event.key==='ArrowRight'?1:-1;
+    selectEvent(EVENTS[(index+direction+EVENTS.length)%EVENTS.length].id);
+  });
   layer.addEventListener('click', event => {
     const beacon = event.target instanceof Element ? event.target.closest('[data-mh-beacon]') : null;
     if (!beacon) return;
@@ -272,7 +321,13 @@
   app.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
-    if(target.closest('[data-mh-panel-toggle]')) { panelExpanded = !panelExpanded; renderPanel(); return; }
+    if(target.closest('[data-mh-panel-toggle]')) {
+      panelExpanded=!panelExpanded;
+      renderPanel();panel.scrollTop=0;
+      panel.querySelector('.mh-panel-grip')?.focus({preventScroll:true});
+      window.requestAnimationFrame(measure);
+      return;
+    }
     const modeBtn = target.closest('[data-mh-mode]');
     if (modeBtn) { setMode(modeBtn.dataset.mhMode); return; }
     const beacon = target.closest('[data-mh-beacon]');
@@ -292,6 +347,20 @@
     }).observe(drawer,{attributes:true,attributeFilter:['hidden']});
   }
   window.addEventListener('resize',()=>window.requestAnimationFrame(measure),{passive:true});
+  // The browser Back button restores the world selected in the URL.
+  // Do not run an extra transition or write another history entry on replay.
+  window.addEventListener('popstate',()=>{
+    const parameters=new URLSearchParams(window.location.search);
+    const requestedMode=parameters.get('mm');
+    const nextMode=['events','connections'].includes(requestedMode)?requestedMode:'people';
+    const nextId=parameters.get('event');
+    if(EVENT_BY_ID[nextId])state.activeEvent=nextId;
+    if(nextMode!==state.mode)setMode(nextMode,false);
+    else if(nextMode!=='people'){
+      panelExpanded=false;renderPanel();panel.scrollTop=0;renderBeacons();
+      window.MarketEventPlanet?.focus(EVENT_BY_ID[state.activeEvent].p);
+    }
+  });
   const controls = document.getElementById('worldControls');
   controls?.addEventListener('click',()=>window.setTimeout(measure,140));
   const requested = new URLSearchParams(window.location.search);
