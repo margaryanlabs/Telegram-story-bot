@@ -80,6 +80,65 @@
      }
    }
  }
+ // Books: four honest entry points into actual sources, never fake editions.
+ // The existing source controller still loads texts, languages and local files.
+ const booksMain=$('#booksMain');
+ if(booksMain&&!$('#v9BooksLanes',booksMain)){
+   const sources=$('.source-tabs',booksMain);
+   const dock=$('.v9-explore-dock',booksMain);
+   const lanes=[
+     {id:'complete',label:'Читать целиком',desc:'Доступные тексты'},
+     {id:'ru',label:'На русском',desc:'Русская Викитека'},
+     {id:'hy',label:'Հայերեն',desc:'Армянская библиотека'},
+     {id:'local',label:'Мои книги',desc:'EPUB · FB2 · TXT'}
+   ];
+   if(sources&&dock&&lanes.every(x=>$('[data-books-source="'+x.id+'"]',sources))){
+     const shelf=document.createElement('nav');
+     shelf.id='v9BooksLanes';
+     shelf.className='v9-books-lanes';
+     shelf.setAttribute('aria-label','Выбрать тип книжной библиотеки');
+     const buttons=new Map();
+     const sync=()=>{
+       for(const lane of lanes){
+         const source=$('[data-books-source="'+lane.id+'"]',sources);
+         const active=source?.classList?.contains('active')===true;
+         const button=buttons.get(lane.id);
+         if(button){
+           button.classList.toggle('is-active',active);
+           button.setAttribute('aria-pressed',String(active));
+         }
+       }
+     };
+     for(const lane of lanes){
+       const button=document.createElement('button');
+       button.type='button';
+       button.className='v9-books-lane';
+       const name=document.createElement('strong');
+       name.textContent=lane.label;
+       const desc=document.createElement('small');
+       desc.textContent=lane.desc;
+       button.append(name,desc);
+       button.addEventListener('click',()=>{
+         const source=$('[data-books-source="'+lane.id+'"]',sources);
+         source?.click();
+         sync();
+         const target=lane.id==='local'?$('#importBanner',booksMain):$('#catalogGrid',booksMain);
+         if(target&&!target.hidden){
+           const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+           target.scrollIntoView?.({block:'start',behavior:reduce?'auto':'smooth'});
+         }
+       });
+       buttons.set(lane.id,button);
+       shelf.appendChild(button);
+     }
+     dock.insertAdjacentElement('afterend',shelf);
+     if(typeof MutationObserver==='function'){
+       const observer=new MutationObserver(sync);
+       observer.observe(sources,{subtree:true,attributes:true,attributeFilter:['class']});
+     }
+     sync();
+   }
+ }
  const gameScreen=$('.screen[data-screen="play"]');
  const launcher=$('#v9ArcadeLauncher',gameScreen);
  const grid=$('.v9-arcade-launch-grid',launcher);
