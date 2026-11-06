@@ -139,3 +139,29 @@ test('Chronosphere styling is scoped to EVENT and mobile/reduced-motion safe',()
   }
   assert.equal(balance,0);
 });
+
+
+test('Active globe beacon carries a sourced meaning, while inactive stars retain years',()=>{
+  const f=mountFixture();
+  f.window.MarketHistoryModes.setMode('events',false);
+  const layer=f.scene.children.find(el=>el.id==='mhEventLayer');
+  assert.ok(layer);
+  const active=layer.children.find(el=>el.dataset.mhBeacon==='2008');
+  const inactive=layer.children.find(el=>el.dataset.mhBeacon==='1987');
+  assert.ok(active&&inactive);
+  assert.match(active.innerHTML,/<b>2008<\/b><small>Кризис доверия<\/small>/);
+  assert.match(inactive.innerHTML,/<b>1987<\/b>/);
+  assert.doesNotMatch(inactive.innerHTML,/<small>/);
+  assert.match(modes,/button\.dataset\.mhLabelSide = pos\.x > w -/);
+  f.window.MarketHistoryModes.selectEvent('1907');
+  const selected=layer.children.filter(el=>el.dataset.mhBeacon==='1907').at(-1);
+  assert.match(selected.innerHTML,/<small>Банковская паника<\/small>/);
+});
+
+test('Short mobile screens keep the time navigator out of the mode-switch',()=>{
+  assert.match(css,/@media\(max-width:819px\) and \(max-height:750px\)/);
+  assert.match(css,/@media\(max-width:819px\) and \(max-height:660px\)/);
+  assert.match(css,/#app \.mh-chrono-nav\{top:149px;padding:7px 10px/);
+  assert.match(css,/#app \.mh-chrono-focus\{display:none\}/);
+  assert.match(css,/#app \.mh-chrono-overline\{font-size:10px/);
+});
