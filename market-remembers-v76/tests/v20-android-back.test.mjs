@@ -5,6 +5,7 @@ import {Script} from 'node:vm';
 const file=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const modes=file('v10/market-history-modes.js');
 const replay=file('v10/shock-replay-2008.js');
+const sheetCss=file('v10/v20-three-state-sheet.css');
 
 function browserFixture(initial='/market/?mm=events&event=2008') {
   let timerId=0;
@@ -194,4 +195,27 @@ test('Only the sheet, mode and public event ID are recorded; event selection doe
   assert.deepEqual(Object.keys(entry).sort(),['depth','event','mode','sheet']);
   assert.equal(entry.depth,0);assert.equal(entry.sheet,'compact');
   assert.doesNotMatch(JSON.stringify(f.history.state),/secret|story|memory|token|private/i);
+});
+
+
+test('Fullscreen makes background worlds inert, restores access on Back and PEOPLE',()=>{
+  const f=browserFixture(),api=f.window.MarketHistoryModes;
+  f.click('[data-mh-panel-toggle]');
+  f.click('[data-mh-sheet-size]');
+  assert.equal(api.sheetState,'full');
+  assert.equal(f.app.dataset.mhSheetState,'full');
+  assert.equal(f.window.MarketHistoryModes.sheetState,'full');
+  assert.equal(f.app.children.find(node=>node.id==='mhEventHeader')?.inert,undefined);
+  assert.equal(f.document.getElementById('scene').inert,true);
+  f.history.back();
+  assert.equal(api.sheetState,'research');
+  assert.equal(f.document.getElementById('scene').inert,false);
+  api.setMode('people',true);
+  assert.equal(f.document.getElementById('scene').inert,false);
+  assert.equal(f.app.dataset.mhSheetState,'compact');
+  assert.match(sheetCss,/overscroll-behavior-y:contain;overflow-y:auto/);
+  assert.match(sheetCss,/touch-action:pan-y/);
+  assert.match(sheetCss,/\.mh-replay-rail\{/);
+  assert.match(sheetCss,/touch-action:pan-x/);
+  assert.match(sheetCss,/#app\[data-mh-sheet-state="full"\] \.mh-planet-surface/);
 });
