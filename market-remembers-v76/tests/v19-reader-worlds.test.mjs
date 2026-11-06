@@ -92,3 +92,23 @@ test('V19.1 thematic PEOPLE → EVENT route keeps source and history separate',(
   assert.match(modes,/panel\.querySelector\('\.mh-panel-grip'\)\?\.focus/);
   new Script(living);
 });
+
+test('V20 compact EVENT previews the source-supplied crisis chain without invented facts',()=>{
+  assert.match(modes,/const impact=event\.mechanism\.split\('→'\)/);
+  assert.match(modes,/class="mh-v20-impact-strip"/);
+  assert.match(modes,/aria-label="Схема механизма кризиса"/);
+  assert.match(css,/\.mh-v20-impact-strip li/);
+  assert.match(css,/mh-history-panel\.is-expanded \.mh-v20-impact-strip/);
+  assert.match(css,/data-mh-mode="connections"\] \.mh-v20-impact-strip/);
+  const mechanisms=[
+    'Доверие → снятие депозитов → дефицит краткосрочных денег',
+    'Резкий обвал → рыночный стресс → проблемы исполнения',
+    'Потеря доверия → отток финансирования → системный стресс',
+    'Спрос на наличность → принудительные продажи → падение ликвидности'
+  ];
+  for(const mechanism of mechanisms){
+    assert.ok(modes.includes(mechanism),'Existing sourced mechanism remains present');
+    assert.equal(mechanism.split('→').length,3,'Each pilot crisis has three recorded stages');
+  }
+  new Script(modes);
+});
