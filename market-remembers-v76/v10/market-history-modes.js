@@ -125,6 +125,7 @@
       '<small>Документированное событие · позиция метки на сфере символическая</small></div>' +
       '<div class="mh-v16-record-meta"><span>◈ VERIFIED CHRONICLE</span><time>'+escape(event.date)+'</time></div>' +
       '<div class="mh-v16-record-title"><span class="mh-v16-record-year">'+escape(event.year)+'</span><h2>'+escape(event.name)+'</h2></div>' +
+      (event.id==='2008' ? '<section class="mh-shock-replay-host mh-shock-replay" id="mhShockReplay2008" aria-label="Управляемая хронология кризиса 2008 года"></section>' : '') +
       '<section class="mh-v16-research-card mh-v16-context"><div class="mh-v16-card-icon">01</div><div><h3>ЧТО ПРОИЗОШЛО</h3><p>'+escape(event.detail)+'</p></div></section>' +
       '<section class="mh-v16-research-card mh-v16-transmission"><div class="mh-v16-card-icon">02</div><div><h3>МЕХАНИЗМ ШОКА</h3><ol class="mh-v16-steps">'+steps+'</ol></div></section>' +
       '<section class="mh-v16-research-card mh-v16-lesson"><div class="mh-v16-card-icon">03</div><div><h3>УРОК ДЛЯ ТРЕЙДЕРА</h3><p>'+escape(event.lesson)+'</p></div></section>' +
@@ -149,20 +150,37 @@
   
   let panelExpanded = false;
   function renderPanel() {
+    window.MarketShockReplay2008?.unmount();
     const event = EVENT_BY_ID[state.activeEvent];
+    const eventIndex = EVENTS.findIndex(item => item.id === event.id);
+    const previousEvent = EVENTS[(eventIndex - 1 + EVENTS.length) % EVENTS.length];
+    const followingEvent = EVENTS[(eventIndex + 1) % EVENTS.length];
+    const chronicle = '<div class="mh-v20-chronicle">' +
+      '<span class="mh-v20-chronicle-label">CRISIS ATLAS / ДОКУМЕНТЫ</span>' +
+      '<span class="mh-v20-chronicle-index" aria-label="Событие '+(eventIndex+1)+' из '+EVENTS.length+'">' +
+      String(eventIndex+1).padStart(2,'0')+' <i>/</i> '+String(EVENTS.length).padStart(2,'0')+'</span>' +
+      '<div class="mh-v20-traverse" role="group" aria-label="Перейти к другому кризису">' +
+      '<button type="button" data-mh-v20-direction="prev" data-mh-event="'+previousEvent.id+
+      '" aria-label="Предыдущее событие: '+escape(previousEvent.name)+'">‹</button>' +
+      '<button type="button" data-mh-v20-direction="next" data-mh-event="'+followingEvent.id+
+      '" aria-label="Следующее событие: '+escape(followingEvent.name)+'">›</button></div></div>';
     panel.classList.toggle('is-expanded',panelExpanded);
     window.MarketSignalDirector?.setEvent(event);
     // The selected crisis has a readable mechanism even without opening the
     // research dossier: show source-supplied stages, never inferred trade data.
     const impact=event.mechanism.split('→').map((part,i)=>
       '<li><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+escape(part.trim())+'</strong></li>').join('');
-    panel.innerHTML = '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':'ПОДРОБНЕЕ ↑')+'</em></button>' +
+    panel.innerHTML = chronicle + '<button type="button" class="mh-panel-grip" data-mh-panel-toggle aria-expanded="'+panelExpanded+'"><span><small>FINANCIAL HISTORY / '+event.year+'</small><strong>'+escape(event.name)+'</strong></span><em>'+(panelExpanded?'СВЕРНУТЬ ↓':(event.id==='2008' && state.mode==='events'?'▶ 6 ЭТАПОВ':'ПОДРОБНЕЕ ↑'))+'</em></button>' +
       '<p class="mh-v19-preview" aria-label="Краткий контекст">'+escape(event.short)+' · '+escape(event.date)+'</p>' +
       '<ol class="mh-v20-impact-strip" aria-label="Схема механизма кризиса">'+impact+'</ol>' +
+      '<div class="mh-v20-source-line"><span>ДОКУМЕНТИРОВАННОЕ СОБЫТИЕ</span><a href="'+escape(event.url)+'" target="_blank" rel="noopener noreferrer" aria-label="Открыть первоисточник: '+escape(event.source)+'">ИСТОЧНИК ↗</a></div>' +
       '<div class="mh-panel-top"><span>◈ EVENT CORE / RESEARCH</span><span>04 / SOURCED EVENTS</span></div>' +
       '<nav class="mh-core-tabs" aria-label="Исследование истории"><button type="button" data-mh-mode="events" aria-pressed="'+(state.mode === 'events')+'" class="'+(state.mode === 'events'?'is-active':'')+'">СОБЫТИЯ</button><button type="button" data-mh-mode="connections" aria-pressed="'+(state.mode === 'connections')+'" class="'+(state.mode === 'connections'?'is-active':'')+'">СВЯЗИ</button></nav>' +
       timeline() + '<div class="mh-panel-body">' + (state.mode === 'connections' ? connectionMarkup(event) : eventMarkup(event)) + '</div>' +
       '<p class="mh-disclaimer">Исторические факты снабжены источниками. Символические связи — тематические, не доказательство причинности и не свидетельства реальных трейдеров.</p>';
+    if (panelExpanded && state.mode==='events' && event.id==='2008') {
+      window.MarketShockReplay2008?.mount(panel.querySelector('#mhShockReplay2008'));
+    }
   }
   function measure() {
     if (state.mode === 'people') return;
@@ -219,6 +237,7 @@
       button.innerHTML = '<span aria-hidden="true" class="mh-beacon-ring"></span><span class="mh-beacon-year">' + event.year + '</span>';
       layer.append(button);
     });
+    window.MarketShockReplay2008?.syncScene();
     window.requestAnimationFrame(measure);
   }
   function setMode(mode, update = true, afterCommit = null) {
@@ -234,7 +253,10 @@
   function commitMode(mode, update = true) {
     const oldMode = state.mode;
     state.mode = mode;
-    if (mode === 'people') panelExpanded = false;
+    if (mode === 'people') {
+      panelExpanded = false;
+      window.MarketShockReplay2008?.unmount();
+    }
     else if (oldMode !== 'people' && oldMode !== mode) panelExpanded = true;
     app.dataset.mhMode = mode;
     switcher.querySelectorAll('[data-mh-mode]').forEach(btn => {
@@ -260,6 +282,7 @@
   function selectEvent(id) {
     if (!EVENT_BY_ID[id]) return;
     const origin=document.activeElement;
+    const fromQuickNav=origin?.closest?.('[data-mh-v20-direction]')?.dataset.mhV20Direction;
     const fromTimeline=!!origin?.closest?.('.mh-timeline [data-mh-event],.mh-v19-neighbors [data-mh-event]');
     const fromBeacon=!!origin?.closest?.('[data-mh-beacon]');
     state.activeEvent = id;
@@ -270,7 +293,9 @@
     panel.scrollTop=0;
     renderBeacons();
     // Re-rendering the panel replaces buttons: retain focus for keyboard users.
-    if(fromTimeline){
+    if(fromQuickNav){
+      panel.querySelector('[data-mh-v20-direction="'+fromQuickNav+'"]')?.focus({preventScroll:true});
+    }else if(fromTimeline){
       const target=window.matchMedia('(max-width:819px)').matches
         ?panel.querySelector('.mh-timeline [data-mh-event="'+id+'"]')
         :panel.querySelector('.mh-panel-grip');
