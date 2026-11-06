@@ -1318,10 +1318,13 @@
       if(activeReaderFetch===readerController)activeReaderFetch=null;
     }
   }
+  let readerReturnFocus=null;
   async function openBook(book){
     stopNarration();
     if(isCatalogBook(book)){showDiscoverBook(book);return;}
     if(!book||!Number.isSafeInteger(Number(book.id))||Number(book.id)<1)return;
+    // Remember the actual book or Continue button, not the hidden reader.
+    if($('reader').hidden)readerReturnFocus=document.activeElement;
     activeReaderFetch?.abort();
     cancelChapterPrefetch();
     ++state.requestBook;
@@ -1329,6 +1332,7 @@
     setFlow(false);
     setFocus(false);
     $('reader').hidden=false;
+    $('readerBack').focus?.({preventScroll:true});
     try{window.Telegram?.WebApp?.BackButton?.show();}catch{}
     $('readerTitle').textContent=compactTitle(book.title);
     $('readerAuthor').textContent=fullName(book);
@@ -1359,6 +1363,13 @@
     setFlow(false);setFocus(false);
     $('readerSettings').hidden=true;
     updateSavedCount();renderContinueShelf();
+    // Recover keyboard and screen-reader position after returning to library.
+    const previous=readerReturnFocus;
+    readerReturnFocus=null;
+    const target=previous?.isConnected?previous:($('continueAction')?.hidden?$('bookSearch'):$('continueAction'));
+    if(target?.isConnected&&typeof target.focus==='function'){
+      try{target.focus({preventScroll:true});}catch{target.focus();}
+    }
   }
   function flip(dir){
     if(!state.pages.length || !state.current)return;
