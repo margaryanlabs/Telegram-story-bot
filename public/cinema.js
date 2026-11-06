@@ -431,12 +431,37 @@
       .trim();
     return cleaned||original;
   }
+  // V9.7: honest, per-item availability. A catalog entry or poster is not
+  // a playback entitlement, and remote playback is never guaranteed.
+  function movieAccess(f){
+    if(f.externalRutube)return {kind:"external",label:"↗ У источника",
+      explanation:"Сторонняя публикация RUTUBE. Права на просмотр внутри Vetogram не подтверждены; язык и доступность проверяются у источника."};
+    if(f.discoveryOnly)return f.watchAvailability==="unavailable"
+      ?{kind:"unavailable",label:"Недоступно у источника",
+        explanation:"В указанном каталоге просмотр сейчас недоступен. Vetogram не содержит видеокопию этой картины."}
+      :{kind:"external",label:"↗ Проверить сервис",
+        explanation:"Это карточка фильма в каталоге, а не доступный для просмотра файл. Проверь права, регион и подписку у указанного сервиса."};
+    if(failedEmbeds.has(f.id))return {kind:"unavailable",label:"Ошибка источника",
+      explanation:"В текущей сессии видеоплеер сообщил об ошибке. Повтори попытку позже или проверь оригинальную страницу источника."};
+    if(f.player?.licensed===true&&approvedSources(f).length>0)
+      return {kind:"embedded",label:"▶ Встроенный плеер",
+        explanation:"Для этой публикации указан разрешённый источник встраивания. Фактическое воспроизведение зависит от региона и доступности провайдера."};
+    if(f.file)return {kind:"archive",label:"▶ Проверить архив",
+      explanation:"Видео запрашивается из Wikimedia Commons при открытии. Формат и доступность файла проверяются во время загрузки."};
+    return {kind:"unavailable",label:"Нет подтверждённого плеера",
+      explanation:"Встроенный просмотр не подтверждён; доступна информация о произведении и ссылка на источник."};
+  }
   function filmCard(f){
     const b=node("button","cinema-card");b.type="button";b.dataset.filmId=String(f.id);b.setAttribute("aria-label",displayFilmTitle(f)+", детали");
     b.append(artElement(f,false));
     const name=node("span","cinema-card-name");name.textContent=displayFilmTitle(f);
     const meta=node("small","cinema-card-meta");meta.textContent=[f.year||null,f.minutes?f.minutes+" мин":null,f.externalRutube?(f.audioClaim?"Дубляж заявлен":"Проверь озвучку"):f.discoveryOnly?(f.watchAvailability==="unavailable"?"Нет доступа у источника":f.russianAudio?"Русская дорожка указана":"Язык неизвестен"):f.contentType||f.genres?.[0]].filter(Boolean).join(" · ");
     b.append(name,meta);
+    const access=movieAccess(f);
+    const availability=node("span","v97-cinema-access v97-cinema-access-"+access.kind);
+    availability.textContent=access.label;
+    b.append(availability);
+    b.dataset.access=access.kind;
     const p=state.library.progress[f.id];
     if(p&&p.d>0&&p.t/p.d<.96){const bar=node("div","cinema-card-progress"),line=node("i");line.style.width=Math.round(100*p.t/p.d)+"%";bar.append(line);b.append(bar)}
     b.addEventListener("click",()=>openDetails(f));
@@ -895,6 +920,10 @@
     }}));
     text("cinemaDetailsTitle",displayFilmTitle(f));
     text("cinemaDetailsMeta",[f.original,f.year,f.minutes?f.minutes+" мин":null,...(f.genres||[])].filter(Boolean).join(" · "));
+    const access=movieAccess(f);
+    text("cinemaDetailsAvailability",access.label+" · "+access.explanation);
+    const accessNode=$("cinemaDetailsAvailability");
+    if(accessNode)accessNode.dataset.access=access.kind;
     text("cinemaDetailsSynopsis",f.synopsis);
     if(f.contentType==="Сериалы"&&f.player){
       text("cinemaDetailsTitle",seriesShowName(f));
@@ -904,7 +933,10 @@
     renderEpisodeChooser(f);
     text("cinemaDetailsCreator",f.creator);
     text("cinemaDetailsLanguage",f.externalRutube?(f.audioClaim?"Загрузчик указывает дубляж, но звуковая дорожка не проверена. Откроется оригинальная страница RUTUBE; права на встраивание не установлены.":"Русская дорожка не проверена. Откроется оригинальная страница RUTUBE."):f.discoveryOnly?(f.russianAudio?f.russianAudio.note+" Источник: "+f.watchProvider+".":"Русскую дорожку для этого фильма пока не подтвердил ни один проверенный официальный источник."):f.player?"Язык: "+(f.spoken||"по данным источника")+". Видеопоток передаёт провайдер, а не наши серверы.":"Оригинальная дорожка: "+f.spoken+". Русская озвучка подключается только при подтверждённых правах и наличии файла.");
-    $("cinemaDetailsWatch").textContent=f.externalRutube?"↗ Открыть видео на RUTUBE":f.contentType==="Сериалы"&&f.player?"▶ Смотреть выбранную серию":f.discoveryOnly?(f.watchAvailability==="unavailable"?"↗ Проверить статус у сервиса":f.russianAudio?"↗ Проверить просмотр на русском":"↗ Найти легальный просмотр"):"▶ Смотреть";
+    $("cinemaDetailsWatch").textContent=f.externalRutube?"↗ Открыть у источника":f.discoveryOnly
+      ?(f.watchAvailability==="unavailable"?"↗ Проверить статус у сервиса":"↗ Проверить доступность")
+      :access.kind==="embedded"?(f.contentType==="Сериалы"?"▶ Смотреть серию":"▶ Смотреть")
+      :access.kind==="archive"?"▶ Проверить видео":access.kind==="unavailable"?"↗ Страница источника":"▶ Проверить источник";
     $("cinemaDetailsSource").textContent=f.externalRutube?"Оригинальная публикация RUTUBE ↗":f.discoveryOnly?"Страница с языками и доступностью ↗":"Перейти к источнику ↗";
     $("cinemaDetailsSource").href=filmPage(f);
     $("cinemaDetailsLicense").href=f.licenseUrl;
