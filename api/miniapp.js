@@ -762,7 +762,7 @@ export default async function handler(req, res) {
         res.status(ownerFailure?.status || 500).json({
           ok: false,
           error: ownerFailure?.error || friendlyPublishError(description),
-          uncertain: !ownerFailure && /STORY_PUBLISH_RESULT_UNCERTAIN|timed out|timeout|ECONNRESET|ETIMEDOUT|network/i.test(description),
+          uncertain: !ownerFailure && /STORY_PRIVACY_DELETE_UNCONFIRMED|STORY_PUBLISH_RESULT_UNCERTAIN|timed out|timeout|ECONNRESET|ETIMEDOUT|network/i.test(description),
         });
         return;
       }

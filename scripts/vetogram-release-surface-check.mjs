@@ -25,6 +25,29 @@ export function inspectReleaseSurface({html,app,story,ai,exists,readSource}){
   add(assetVersions.length>0&&assetVersions.every(v=>/^[A-Za-z0-9_-]+$/.test(v))&&
       new Set(assetVersions).size===1,
       'MIXED_RELEASE_ASSET_VERSIONS');
+  // Each media world is an independent HTML entrypoint. A Studio-only cache
+  // check cannot catch an old reader/player running inside a new parent frame.
+  // Require one immutable cache identity across the three real media worlds.
+  if (typeof readSource === 'function') {
+    const release=assetVersions[0]||'';
+    for (const entrypoint of [
+      'public/music-module.html','public/cinema.html','public/books.html'
+    ]) {
+      if (!exists(entrypoint)) {
+        errors.push('MISSING_MEDIA_ENTRYPOINT: '+entrypoint);
+        continue;
+      }
+      const embeddedHtml=readSource(entrypoint);
+      const embeddedAssets=[...embeddedHtml.matchAll(
+        /<(?:script|link)\b[^>]*\b(?:src|href)=["'](\/[^"']+\.(?:js|css)(?:[?#][^"']*)?)["'][^>]*>/gi
+      )].map(m=>m[1]);
+      const embeddedVersions=embeddedAssets.map(url=>
+        url.match(/[?&]v=([^&#]+)/)?.[1]||'');
+      add(embeddedVersions.length>=10 && embeddedVersions.every(v=>
+        v===release && /^[A-Za-z0-9_-]+$/.test(v)),
+        'EMBEDDED_RELEASE_KEY_MISMATCH: '+entrypoint);
+    }
+  }
   const localPaths=rawAssets.map(url=>url.split(/[?#]/)[0]);
   const seen=new Set();
   for(const file of localPaths){

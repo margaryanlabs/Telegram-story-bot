@@ -1,0 +1,41 @@
+# Vetogram full-stack QA: adopt the OLD 2026-11-01 review service only.
+# The current Vetogram V9.8 visual review and real production bot are untouched.
+# First Blueprint sync must be inspected and explicitly approved before apply.
+services:
+  - type: web
+    name: vetogram-one-universe-review
+    runtime: node
+    repo: https://github.com/margaryanlabs/Telegram-story-bot
+    branch: fix/vetogram-core-safety-20261107
+    region: frankfurt
+    plan: free
+    autoDeployTrigger: off
+    buildCommand: npm ci --omit=dev --no-audit --no-fund && node --test tests/vetogram-render-server.test.js tests/vetogram-core-safety-20261107.test.js tests/vetogram-onboarding-controller.test.js
+    startCommand: node scripts/vetogram-render-server.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VERCEL_ENV
+        value: preview
+      - key: VETOGRAM_RENDER_STAGE
+        value: "true"
+      - key: VETOGRAM_UNIFIED_ONBOARDING
+        value: "1"
+      - key: VETO_STORAGE_PROVIDER
+        value: neon
+      - key: VETO_NEON_CRON_ENABLED
+        value: "false"
+      - key: STORY_PILOT_BASE_URL
+        value: https://vetogram-one-universe-review.onrender.com
+      - key: VETOGRAM_APP_URL
+        value: https://vetogram-one-universe-review.onrender.com
+      - key: TELEGRAM_API_ID
+        sync: false
+      - key: TELEGRAM_API_HASH
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: VETO_NEON_SESSION_KEY
+        generateValue: true
+      - key: VETO_NEON_DATABASE_URL
+        sync: false

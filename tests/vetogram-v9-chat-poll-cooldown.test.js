@@ -91,5 +91,8 @@ test('429 cooldown remains across thread changes but is cleared on owner change'
   const open=ui.slice(ui.indexOf('function openThread('),ui.indexOf('function openThread(')+1800);
   assert.doesNotMatch(open,/syncCooldownUntil\s*=\s*0/);
   assert.match(ui,/issue\.retryAfterSeconds=/);
-  assert.match(html,/telegram-chats\.js\?v=20261106-v9-chat-poll-01/);
+  const version=html.match(/\/app\.js\?v=([^"'&#]+)/)?.[1];
+  assert.ok(version,'app.js release version required');
+  assert.ok(html.includes('/telegram-chats.js?v='+version),
+    'chat poll script must share release key with the entrypoint');
 });

@@ -28,12 +28,14 @@ test('Media hub has three real module destinations, not four or games',()=>{
  assert.ok(html.indexOf('id="v9MediaResume"')<html.indexOf('class="v6-media-grid'));
 });
 test('media scripts load after existing Universe owner; cache identity stays unified',()=>{
- const universe=html.indexOf('/vetogram-universe.js?v=20261105-v9-02');
- const index=html.indexOf('/vetogram-universe-61.js?v=20261105-v9-02');
- const coreTag=html.indexOf('/vetogram-v9-media-hub-core.js?v=20261105-v9-02');
- const uiTag=html.indexOf('/vetogram-v9-media-hub.js?v=20261105-v9-02');
+ const version=html.match(/\/app\.js\?v=([^"'&#]+)/)?.[1];
+ assert.ok(version,'app.js must have a release version');
+ const universe=html.indexOf('/vetogram-universe.js?v='+version);
+ const index=html.indexOf('/vetogram-universe-61.js?v='+version);
+ const coreTag=html.indexOf('/vetogram-v9-media-hub-core.js?v='+version);
+ const uiTag=html.indexOf('/vetogram-v9-media-hub.js?v='+version);
  assert.ok(universe>=0&&index>universe&&coreTag>index&&uiTag>coreTag);
- assert.match(html,/vetogram-v9-media-hub.css\?v=20261105-v9-02/);
+ assert.ok(html.includes('/vetogram-v9-media-hub.css?v='+version));
  assert.doesNotMatch(html,/YOUR UNIVERSE \/ 07|001 — 004/);
 });
 test('last category persists only a safe enum and is separated per signed owner',()=>{

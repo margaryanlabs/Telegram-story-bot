@@ -40,31 +40,26 @@ test('cinema music books are real modules, local games are not a media catalog t
 test('a unified cache release prevents stale Android/WebView CSS and JS',()=>{
   const assets=[...html.matchAll(/<(?:script|link)\b[^>]*\b(?:src|href)=["'](\/[^"']+\.(?:js|css))\?v=([^"'&#]+)["']/g)]
     .map(([,path,version])=>({path,version}));
-  assert.ok(assets.length>=70);
-  // Explicit per-slice cache bumps are necessary after code changes. Guard
-  // against stale V9.02 for modified assets, duplicate path mounts and
-  // accidental release-key drift for unchanged files.
-  const updated=new Map([
-    ...['/vetogram-play.css','/vetogram-v9-games.css','/vetogram-play.js',
-      '/vetogram-play-arcade.js','/vetogram-play-plus.js']
-      .map(path=>[path,'20261105-v9-games-01']),
-    ...['/vetogram-v9-gif-maker.css','/vetogram-v9-gif-maker.js']
-      .map(path=>[path,'20261106-v9-gif-01']),
-    ...['/studio-module.js','/brand-pack.js']
-      .map(path=>[path,'20261106-v9-studio-01']),
-    ...['/app.js','/vetogram-v9-story-engine.css']
-      .map(path=>[path,'20261106-v9-story-01']),
-    ['/telegram-chats.js','20261106-v9-chat-send-02']
-  ]);
+  assert.ok(assets.length>=70,'complete V9 WebView asset graph must be loaded');
+  const version=assets.find(asset=>asset.path==='/app.js')?.version;
+  assert.match(version||'',/^20\d{6}-v9-\d{2}$/,'immutable auditable V9 cache key');
   assert.equal(new Set(assets.map(asset=>asset.path)).size,assets.length,
-    'No JS/CSS path may be mounted twice with conflicting cache keys');
-  for(const asset of assets)
-    assert.equal(asset.version,updated.get(asset.path)||'20261105-v9-02',
-      'Incorrect cache key: '+asset.path);
-  for(const path of updated.keys())
-    assert.ok(assets.some(asset=>asset.path===path),'Missing updated asset '+path);
-  for(const file of ['music-module.html','cinema.html','books.html'])
-    assert.match(read(file),/\/vetogram-reborn-modules\.css\?v=20261105-v9-02/);
+    'No JS/CSS asset is mounted twice');
+  assert.equal(new Set(assets.map(asset=>asset.version)).size,1,
+    'All boot assets must share exactly one release key');
+  for(const path of ['/vetogram-play.css','/vetogram-v9-games.css',
+      '/vetogram-play.js','/vetogram-play-arcade.js','/vetogram-play-plus.js',
+      '/vetogram-v9-gif-maker.css','/vetogram-v9-gif-maker.js',
+      '/studio-module.js','/brand-pack.js','/app.js',
+      '/vetogram-v9-story-engine.css','/telegram-chats.js']){
+    assert.ok(assets.some(asset=>asset.path===path&&asset.version===version),
+      'Missing/stale critical V9 asset '+path);
+  }
+  for(const file of ['music-module.html','cinema.html','books.html']){
+    const embedded=read(file);
+    const embeddedKey=embedded.match(/\/vetogram-reborn-modules\.css\?v=([^"'&#]+)/)?.[1];
+    assert.equal(embeddedKey,version,'Embedded module release disagrees: '+file);
+  }
 });
 
 test('monochrome source token system does not reintroduce the blue presentation',()=>{

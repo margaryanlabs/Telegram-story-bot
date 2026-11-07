@@ -1,9 +1,10 @@
+import { vetogramAppUrl } from '../lib/vetogram-app-url.js';
 import { selectedStorageProvider } from '../lib/storage-provider.js';
 import { neonCronAuthorized } from '../lib/neon-scheduler-auth.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { verifyEdgeSignature } from '../lib/viewer-sync-signing.js';
 import {
-  claimBackupJobs,completeBackupJob,getViewerSession,getPrivacySettings,
+  claimBackupJobs,completeBackupJob,getViewerSession,getPrivacySettings,getBackupJob,
   importUserHistoryBatch,pauseBackupJob,viewerDbConfigured,
 } from '../lib/viewer-sync-store.js';
 import { withBackupClient,fetchBackupPage } from '../lib/telegram-history-backup.js';
@@ -26,10 +27,7 @@ function authorized(req) {
 }
 async function notifyCompleted(ownerId, job, total,media) {
   if(!BOT||job.notify_completion===false)return false;
-  const url=new URL('https://telegram-story-bot-murex.vercel.app/studio.html');
-  url.searchParams.set('screen','chats');
-  url.searchParams.set('chat',String(job.chat_id));
-  url.searchParams.set('v','20261016-veto-smart-inbox-v1');
+  const url=vetogramAppUrl({screen:'chats',chatId:String(job.chat_id)});
   const response=await fetch('https://api.telegram.org/bot'+BOT+'/sendMessage',{
     method:'POST',headers:{'content-type':'application/json'},
     body:JSON.stringify({
@@ -38,7 +36,7 @@ async function notifyCompleted(ownerId, job, total,media) {
         +'\nСохранено текстовых сообщений: '+Number(total||0)
         +'\nМедиафайлов в Vault: '+Number(media||0)
         +'\n\nАрхив остаётся отдельно от Telegram согласно выбранному сроку хранения.',
-      reply_markup:{inline_keyboard:[[{text:'Открыть копию',web_app:{url:url.toString()}}]]},
+      reply_markup:url ? {inline_keyboard:[[{text:'Открыть копию',web_app:{url}}]]} : undefined,
     }),
     signal:AbortSignal.timeout(4500),
   });
@@ -66,6 +64,11 @@ async function runJob(job) {
         ownerId:userId,chatId,offsetId:job.offset_id,retentionDays:settings.retentionDays,
         mediaEnabled:job.media_enabled === true,
       });
+      // Re-check consent and exact job after Telegram fetched this page.
+      const latest=await getPrivacySettings(userId);
+      const jobState=await getBackupJob(userId,chatId);
+      const active=jobState?.enabled===true && jobState?.state==='active';
+      if(!latest.ghostInbox || !active)return {paused:true};
       const result=page.rows.length?await importUserHistoryBatch(userId,chatId,page.rows):{inserted:0};
       const media=await archiveHistoryMedia(client,userId,chatId,page.mediaCandidates,{
         enabled:job.media_enabled===true,
@@ -75,6 +78,7 @@ async function runJob(job) {
         nextOffsetId:page.nextOffsetId,complete:!page.hasMore,
       };
     });
+    if(progress?.paused)return {result:'paused_during_run'};
     finished=progress.complete;
     const outcome=await completeBackupJob(userId,chatId,progress);
     if(finished && outcome?.state==='done'){

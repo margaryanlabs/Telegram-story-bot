@@ -118,7 +118,8 @@ export function createBusinessWizardHandler(overrides={}) {
         getPrivacySettings(ownerId).catch(()=>null),verifyStoredBusinessConnection(token,ownerId),
       ]);
       return json(res,200,{
-        enabled:true,...info.state.status,chats:info.chats.slice(0,100),
+        enabled:true,canConnectInsideVetogram:true,requiresManualTelegramSettings:false,
+        ...info.state.status,chats:info.chats.slice(0,100),
         snapshotToken:signConsentSnapshot(ownerId,info.state,token),
         allowConnect:info.state.status.state !== 'other_bot',noReplaceOtherBot:true,
         permissions:info.state.status.rights || {reply:false,readMessages:false,manageStories:false},
@@ -150,6 +151,17 @@ export function createBusinessWizardHandler(overrides={}) {
       });
     },{requestRetries:1,floodSleepThreshold:0}));
     let settingsUpdated = false;
+    let archiveOptInRevoked = false;
+    if (action === 'disconnect' && result?.disconnected === true) {
+      try {
+        // Telegram access is revoked, but previously stored copies are kept.
+        // Prevent the Privacy UI from presenting revoked Business capture as on.
+        await updatePrivacySettings(ownerId,{antiDelete:false});
+        archiveOptInRevoked = true;
+      } catch {
+        // Fail without claiming the privacy setting was successfully updated.
+      }
+    }
     if (action === 'connect' && body.antiDeleteConsent === true) {
       try {
         await updatePrivacySettings(ownerId,{ antiDelete:true,editHistory:true,ghostInbox:true });
@@ -161,7 +173,7 @@ export function createBusinessWizardHandler(overrides={}) {
     // read-only Bot API verification confirms owner + rights independently.
     const delivery = await verifyStoredBusinessConnection(token,ownerId);
     if (action === 'disconnect') delivery.serverState = 'pending-webhook';
-    return json(res,200,{...result,settingsUpdated,
+    return json(res,200,{...result,settingsUpdated,archiveOptInRevoked,
       archiveConsentRequested:action==='connect' && body.antiDeleteConsent===true,
       scope:body.scope || 'preserve',delivery,
       note:'Подключение и права проверены в Telegram. Доставка событий, публикация и удаление требуют отдельной проверки.'});

@@ -37,14 +37,18 @@ function fixture(enabled=true,existing=false,archiveWriteFails=false) {
       ...action,hasAttribute:attr=>attr==='data-business-apply',get disabled(){return action.disabled},set disabled(v){action.disabled=v},
     }:null}})}};
 }
-test('automatic handoff does not show the new wizard when production capability is disabled',async()=>{
+test('automatic handoff warns inside Vetogram when the protected server is unavailable',async()=>{
   const f=fixture(false);assert.equal(await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true}),false);
-  assert.equal(f.sheet.hidden,true);assert.equal(f.content.innerHTML,'');assert.equal(f.requests.length,1);
+  assert.equal(f.sheet.hidden,false);
+  assert.match(f.content.innerHTML,/Сообщения НЕ архивируются автоматически/);
+  assert.match(f.content.innerHTML,/data-business-retry="1"/);
+  assert.equal(f.requests.length,1);
 });
 test('first Business connection requires separately chosen peers and capabilities',async()=>{
   const f=fixture();assert.equal(await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true}),true);
   assert.match(f.content.innerHTML,/id="businessWizardStories"/);
   assert.match(f.content.innerHTML,/id="businessWizardAntiDelete"/);
+  assert.match(f.content.innerHTML,/value="selected-private" checked/);
   assert.match(f.content.innerHTML,/не включаются автоматически/);
   assert.doesNotMatch(f.content.innerHTML,/value="all-private" checked/);
   f.inputs.businessWizardConsent.checked=true;await f.change();
@@ -132,11 +136,12 @@ test('story-only consent does not show a false Anti-Delete storage warning',asyn
 });
 
 
-test('existing Business connection is not reprompted automatically',async()=>{
+test('existing Business owner without Anti-Delete opt-in gets the in-app consent flow instead of a silent skip',async()=>{
   const f=fixture(true,true);
   const offered=await f.win.VetoTelegramOpenUnifiedOnboarding({automatic:true});
-  assert.equal(offered,false);
-  assert.equal(f.sheet.hidden,true);
+  assert.equal(offered,true);
+  assert.equal(f.sheet.hidden,false);
+  assert.match(f.content.innerHTML,/id="businessWizardAntiDelete"/);
   assert.equal(f.requests.filter(r=>r.body.action==='connect').length,0);
 });
 test('permissions require policy acceptance independently from Anti-Delete consent',async()=>{

@@ -140,7 +140,12 @@ async function ghostDiagnostics(token, userId) {
   const webhookUrl = String(webhookInfo?.url || '');
   const webhookReady = Boolean(webhookUrl && /\/api\/webhook-v8(?:$|\?)/.test(webhookUrl));
   const pendingUpdates = Number(webhookInfo?.pending_update_count || 0);
-  const storageReady = Boolean(storeHealth?.storage === 'ok' && (storeHealth?.directGhostWrites || storeHealth?.postgrestFallback));
+  // Neon direct SQL has no legacy Supabase health flags.
+  const storageReady = Boolean(storeHealth?.storage === 'ok' && (
+    (storeHealth?.backend === 'neon' && Number(storeHealth?.schemaVersion) >= 6)
+    || storeHealth?.directGhostWrites === true
+    || storeHealth?.postgrestFallback === true
+  ));
   const mediaVaultReady = Boolean(storeHealth?.mediaVault);
   const deleteItems = Array.isArray(deletedData?.items) ? deletedData.items : [];
   // Do not count an older Business bot's deletion as proof that this
@@ -179,7 +184,9 @@ async function ghostDiagnostics(token, userId) {
     storage: {
       ok: storageReady,
       label: 'Protected VETO Privacy store',
-      detail: storageReady ? 'Store gateway responsive (direct SQL or REST fallback)' : 'Store gateway unavailable',
+      detail: storageReady
+        ? storeHealth?.backend === 'neon' ? 'Neon archive connected · schema verified' : 'Store gateway responsive (direct SQL or REST fallback)'
+        : 'Store gateway unavailable',
     },
     mediaVault: {
       ok: mediaVaultReady,
@@ -396,7 +403,7 @@ export default async function handler(req, res) {
       if (body.confirm !== 'DELETE_MY_VETO_ARCHIVE') {
         res.status(409).json({
           ok: false,
-          error: 'Подтверди безвозвратное удаление сохранённых копий VETO отдельно от очистки Telegram.',
+          error: 'Подтверди удаление копий Vetogram. Архивирование, Anti-Delete и фоновые задания будут остановлены до нового согласия.',
         });
         return;
       }

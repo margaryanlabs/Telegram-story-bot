@@ -149,9 +149,9 @@ test('responsive, reduced-motion and light themes preserve accessible controls',
   assert.match(css,/Focused game controls must remain legible in Pearl\/Linen/);
   assert.match(css,/\.v9-arcade-active #vpQuickGames \.vp-mini :is\(h3,p,\.vp-mini-stat/);
   assert.match(css,/:focus-visible/);
-  assert.match(html,/vetogram-v9-games\.css\?v=20261105-v9-games-01/);
-  assert.match(html,/vetogram-play\.js\?v=20261105-v9-games-01/);
-  assert.match(html,/vetogram-play\.css\?v=20261105-v9-games-01/);
-  assert.match(html,/vetogram-play-arcade\.js\?v=20261105-v9-games-01/);
-  assert.match(html,/vetogram-play-plus\.js\?v=20261105-v9-games-01/);
+  const version=html.match(/\/app\.js\?v=([^"'&#]+)/)?.[1];
+  assert.ok(version,'app.js release version required');
+  for(const asset of ['vetogram-v9-games.css','vetogram-play.js',
+    'vetogram-play.css','vetogram-play-arcade.js','vetogram-play-plus.js'])
+    assert.ok(html.includes('/'+asset+'?v='+version),'missing/stale games asset: '+asset);
 });
