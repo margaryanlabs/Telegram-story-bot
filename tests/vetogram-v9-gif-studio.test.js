@@ -79,8 +79,10 @@ test('Sticker and emoji pack handoff uses official HTTPS Telegram links, never a
   }
   const html=read('studio.html');
   assert.match(html,/id="studioOpenDirectButton" type="button">Открыть в Telegram/);
-  assert.match(html,/studio-module\.js\?v=20261106-v9-studio-01/);
-  assert.match(html,/brand-pack\.js\?v=20261106-v9-studio-01/);
+  const version=html.match(/\/app\.js\?v=([^"'&#]+)/)?.[1];
+  assert.ok(version,'app.js release version required');
+  for(const asset of ['studio-module.js','brand-pack.js'])
+    assert.ok(html.includes('/'+asset+'?v='+version),'missing/stale studio asset: '+asset);
 });
 
 test('Local GIF owner boundary resets stale image and rejects in-flight export after account switch',()=>{

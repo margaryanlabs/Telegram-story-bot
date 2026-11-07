@@ -61,8 +61,10 @@ test('recovery is explicit and does not automatically resend to Telegram',()=>{
 });
 
 test('story controls and failure panel use a real V9 stylesheet with motion and theme fallbacks',()=>{
-  assert.match(html,/vetogram-v9-story-engine\.css\?v=20261106-v9-story-01/);
-  assert.match(html,/app\.js\?v=20261106-v9-story-01/);
+  const version=html.match(/\/app\.js\?v=([^"'&#]+)/)?.[1];
+  assert.ok(version,'app.js release version required');
+  assert.ok(html.includes('/vetogram-v9-story-engine.css?v='+version),
+    'story engine and publisher must share release key');
   assert.match(css,/\.v9-story-uncertain\[hidden\]\{display:none!important\}/);
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.match(css,/data-veto-theme="pearl"/);
