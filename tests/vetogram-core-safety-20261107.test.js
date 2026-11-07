@@ -81,3 +81,11 @@ test('Backend supports explicit in-app MTProto permission handoff and revocation
   assert.match(api,/archiveOptInRevoked/);
   assert.match(read('lib/telegram-business-consent.js'),/new Api\.account\.UpdateConnectedBot\(/);
 });
+
+test('Neon archive readiness accepts the direct SQL provider and valid schema',()=>{
+  const source=read('api/privacy.js');
+  assert.match(source,/storeHealth\?\.backend === 'neon' && Number\(storeHealth\?\.schemaVersion\) >= 6/);
+  assert.match(source,/storeHealth\?\.directGhostWrites === true/);
+  assert.match(source,/storeHealth\?\.postgrestFallback === true/);
+  assert.match(source,/Neon archive connected/);
+});
