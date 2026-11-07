@@ -1518,7 +1518,14 @@
     if (!automatic) { await openBusinessWizard(); return true; }
     try {
       const result = await businessWizardRequest('prepare');
-      if (result.enabled === false || result.state === 'storylab') return false;
+      if (result.enabled === false) {
+        openSheet(`<span class="kicker">VETOGRAM · ЗАЩИТА</span><h2>Автоматизация пока недоступна</h2>
+          <p>Telegram подключён, но серверный мастер защиты не активирован. Сообщения НЕ архивируются автоматически. Проверь разрешения бота в Telegram Business или вернись к настройке после восстановления сервера.</p>
+          <div class="sheet-actions"><button class="accent" data-business-manual="1">Инструкция Telegram Business</button><button data-business-close="1">Продолжить без защиты</button></div>`);
+        return false;
+      }
+      // An existing Business connection without Anti-Delete consent is not protection.
+      if (result.state === 'storylab' && result.diagnostics?.antiDelete === true) return false;
       renderBusinessWizardPicker(result);
       return true;
     } catch {

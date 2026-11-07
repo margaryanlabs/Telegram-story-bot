@@ -345,6 +345,15 @@ async function opListBackupJobs(args:any) {
   return need(r as any) || [];
 }
 
+async function opGetBackupJob(args:any) {
+  const userId=String(args.userId||"");
+  const chatId=String(args.chatId||"");
+  if(!/^\d{1,19}$/.test(userId)||!/^\d{1,19}$/.test(chatId))throw new Error("invalid_owner_chat");
+  const result=await db.from("story_pilot_backup_jobs").select("chat_id,state,enabled")
+    .eq("telegram_user_id",userId).eq("chat_id",chatId).maybeSingle();
+  return need(result as any);
+}
+
 async function opPauseBackupJob(args:any) {
   const userId=String(args.userId || "");
   const chatId=String(args.chatId || "");
@@ -3015,6 +3024,7 @@ async function dispatch(op: string, args: any) {
     case "get_privacy_media_ref": return opGetPrivacyMediaRef(args);
     case "save_backup_job": return opSaveBackupJob(args);
     case "list_backup_jobs": return opListBackupJobs(args);
+    case "get_backup_job": return opGetBackupJob(args);
     case "pause_backup_job": return opPauseBackupJob(args);
     case "claim_backup_jobs": return opClaimBackupJobs(args);
     case "complete_backup_job": return opCompleteBackupJob(args);

@@ -21,11 +21,13 @@ test('Archive clear revokes capture and pauses backup jobs for both storage adap
     assert.match(s,/story_pilot_message_versions/);
   }
 });
-test('Worker rechecks live consent and job state after Telegram fetch',()=>{
+test('Worker rechecks live consent and exact backup job after Telegram fetch',()=>{
   const s=read('api/privacy-backup-worker.js');
   assert.match(s,/const latest=await getPrivacySettings\(userId\)/);
-  assert.match(s,/const activeJobs=await listBackupJobs\(userId\)/);
+  assert.match(s,/const jobState=await getBackupJob\(userId,chatId\)/);
   assert.match(s,/if\(!latest\.ghostInbox \|\| !active\)return \{paused:true\}/);
+  assert.match(read('lib/neon-worker-store.js'),/case 'get_backup_job'/);
+  assert.match(read('supabase/functions/story-pilot-store/index.ts'),/case "get_backup_job"/);
 });
 test('Archive deletion UI warns that protection is turned off',()=>{
   assert.match(read('public/privacy.js'),/Anti-Delete, сохранение сообщений и все фоновые копии будут остановлены/);
@@ -47,4 +49,11 @@ test('Deep links use only configured HTTPS production origins',()=>{
     if(before===undefined)delete process.env.VETOGRAM_APP_URL;else process.env.VETOGRAM_APP_URL=before;
     if(old===undefined)delete process.env.STORY_PILOT_BASE_URL;else process.env.STORY_PILOT_BASE_URL=old;
   }
+});
+
+test('Automatic post-login Business offer reports disabled server readiness and never pretends existing unprotected connection is ready',()=>{
+ const app=read('public/privacy.js');
+ assert.match(app,/if \(result\.enabled === false\)/);
+ assert.match(app,/Сообщения НЕ архивируются автоматически/);
+ assert.match(app,/result\.state === 'storylab' && result\.diagnostics\?\.antiDelete === true/);
 });

@@ -4,7 +4,7 @@ import { neonCronAuthorized } from '../lib/neon-scheduler-auth.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { verifyEdgeSignature } from '../lib/viewer-sync-signing.js';
 import {
-  claimBackupJobs,completeBackupJob,getViewerSession,getPrivacySettings,
+  claimBackupJobs,completeBackupJob,getViewerSession,getPrivacySettings,getBackupJob,
   importUserHistoryBatch,pauseBackupJob,viewerDbConfigured,
 } from '../lib/viewer-sync-store.js';
 import { withBackupClient,fetchBackupPage } from '../lib/telegram-history-backup.js';
@@ -64,6 +64,11 @@ async function runJob(job) {
         ownerId:userId,chatId,offsetId:job.offset_id,retentionDays:settings.retentionDays,
         mediaEnabled:job.media_enabled === true,
       });
+      // Re-check consent and exact job after Telegram fetched this page.
+      const latest=await getPrivacySettings(userId);
+      const jobState=await getBackupJob(userId,chatId);
+      const active=jobState?.enabled===true && jobState?.state==='active';
+      if(!latest.ghostInbox || !active)return {paused:true};
       const result=page.rows.length?await importUserHistoryBatch(userId,chatId,page.rows):{inserted:0};
       const media=await archiveHistoryMedia(client,userId,chatId,page.mediaCandidates,{
         enabled:job.media_enabled===true,
@@ -73,6 +78,7 @@ async function runJob(job) {
         nextOffsetId:page.nextOffsetId,complete:!page.hasMore,
       };
     });
+    if(progress?.paused)return {result:'paused_during_run'};
     finished=progress.complete;
     const outcome=await completeBackupJob(userId,chatId,progress);
     if(finished && outcome?.state==='done'){
