@@ -39,7 +39,7 @@ export function inspectReleaseSurface({html,app,story,ai,exists,readSource}){
       }
       const embeddedHtml=readSource(entrypoint);
       const embeddedAssets=[...embeddedHtml.matchAll(
-        /<(?:script|link)\\b[^>]*\\b(?:src|href)=["'](\\/[^"']+\\.(?:js|css)(?:[?#][^"']*)?)["'][^>]*>/gi
+        /<(?:script|link)\b[^>]*\b(?:src|href)=["'](\/[^"']+\.(?:js|css)(?:[?#][^"']*)?)["'][^>]*>/gi
       )].map(m=>m[1]);
       const embeddedVersions=embeddedAssets.map(url=>
         url.match(/[?&]v=([^&#]+)/)?.[1]||'');

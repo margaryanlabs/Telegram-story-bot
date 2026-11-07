@@ -215,9 +215,9 @@ test('embedded music, cinema and books reject stale iframe cache versions',()=>{
     const result=check({readSource:path=>{
       const original=safe.readSource(path);
       if(path!==entry)return original;
-      const target=original.match(/\\/vetogram-reborn-modules\\.css\\?v=([^"'&#]+)/)?.[0];
+      const target=original.match(/\/vetogram-reborn-modules\.css\?v=([^"'&#]+)/)?.[0];
       assert.ok(target,'an actual media module stylesheet must be versioned: '+entry);
-      return original.replace(target,target.replace(/\\?v=[A-Za-z0-9_-]+/,'?v=stale-media-release'));
+      return original.replace(target,target.replace(/\?v=[A-Za-z0-9_-]+/,'?v=stale-media-release'));
     }});
     assert.ok(result.errors.includes('EMBEDDED_RELEASE_KEY_MISMATCH: '+entry),
       'parent and iframe cannot safely mix CSS/JS: '+entry);
