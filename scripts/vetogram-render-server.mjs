@@ -134,6 +134,12 @@ export function createVetogramRenderServer({root=PUBLIC_ROOT,router=vetogramApiR
     if(pathname.startsWith('/api/')) {
       const match=/^\/api\/([a-z0-9-]+)$/.exec(pathname);
       if(!match)return fail(res,404,'unknown_api_endpoint');
+      // A staging service must not become the live bot's webhook or mutate its
+      // menu/settings. A distinct test bot is required for full webhook QA.
+      if (process.env.VETOGRAM_RENDER_STAGE === 'true' && req.method === 'POST'
+        && ['webhook-v7','webhook-v8','setup'].includes(match[1])) {
+        return fail(res,403,'staging_bot_mutation_disabled');
+      }
       prepareVercelResponse(res);
       req.query=Object.fromEntries(url.searchParams.entries());
       req.query.route=match[1];

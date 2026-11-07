@@ -38,7 +38,7 @@ test('Render adapter parses real JSON POST requests and forwards query without l
     const data=await res.json();
     assert.equal(res.status,200);
     assert.equal(data.query.limit,'2');
-    assert.equal(data.query.route,undefined);
+    assert.equal(data.query.route,'echo'); // fixture sees route; production router strips it
     assert.deepEqual(data.body,{action:'prepare',chatId:'101'});
   });
 });
@@ -63,4 +63,21 @@ test('Render redirects only within the same origin',async()=>{
     assert.equal(res.status,302);
     assert.equal(res.headers.get('location'),'/studio.html');
   });
+});
+
+test('staging rejects webhook and setup writes without changing the Telegram bot',async()=>{
+  const original=process.env.VETOGRAM_RENDER_STAGE;
+  process.env.VETOGRAM_RENDER_STAGE='true';
+  try{
+    await withServer(async origin=>{
+      for(const path of ['/api/webhook-v7','/api/webhook-v8','/api/setup']){
+        const res=await fetch(origin+path,{method:'POST',headers:{'content-type':'application/json'},body:'{}'});
+        assert.equal(res.status,403,path);
+        assert.equal((await res.json()).error,'staging_bot_mutation_disabled');
+      }
+    });
+  }finally{
+    if(original===undefined)delete process.env.VETOGRAM_RENDER_STAGE;
+    else process.env.VETOGRAM_RENDER_STAGE=original;
+  }
 });
