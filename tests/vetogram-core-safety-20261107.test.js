@@ -89,3 +89,10 @@ test('Neon archive readiness accepts the direct SQL provider and valid schema',(
   assert.match(source,/storeHealth\?\.postgrestFallback === true/);
   assert.match(source,/Neon archive connected/);
 });
+
+test('Story privacy mismatch messages never guarantee absence of exposure solely from a deletion request',()=>{
+ const src=read('lib/story-app-publisher.js');
+ assert.doesNotMatch(src,/поэтому Story автоматически удалена/);
+ assert.doesNotMatch(src,/поэтому публикация автоматически удалена/);
+ assert.match(src,/Проверь Stories в официальном Telegram/);
+});
