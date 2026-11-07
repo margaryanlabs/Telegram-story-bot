@@ -396,7 +396,7 @@ export default async function handler(req, res) {
       if (body.confirm !== 'DELETE_MY_VETO_ARCHIVE') {
         res.status(409).json({
           ok: false,
-          error: 'Подтверди безвозвратное удаление сохранённых копий VETO отдельно от очистки Telegram.',
+          error: 'Подтверди удаление копий Vetogram. Архивирование, Anti-Delete и фоновые задания будут остановлены до нового согласия.',
         });
         return;
       }

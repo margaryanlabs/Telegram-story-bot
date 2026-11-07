@@ -1550,6 +1550,15 @@ async function opGetMessageVersions(args: any) {
 
 async function opClearPrivacyArchive(args: any) {
   const userId = String(args.userId);
+  if (!/^\d{1,19}$/.test(userId)) throw new Error("invalid_owner");
+  // Revocation must precede media deletion; an in-flight worker checks opt-in
+  // once more before writing a page of history.
+  need(await db.from("story_pilot_privacy_settings").update({
+    anti_delete:false,edit_history:false,ghost_inbox:false,updated_at:new Date().toISOString(),
+  }).eq("telegram_user_id",userId) as any);
+  need(await db.from("story_pilot_backup_jobs").update({
+    enabled:false,state:"paused",lease_until:new Date().toISOString(),updated_at:new Date().toISOString(),
+  }).eq("telegram_user_id",userId) as any);
   let deletedCount = 0;
 
   while (true) {
@@ -1573,7 +1582,12 @@ async function opClearPrivacyArchive(args: any) {
     if (rows.length < 1000) break;
   }
 
-  return { deleted: deletedCount };
+  need(await db.from("story_pilot_message_versions").delete()
+    .eq("telegram_user_id",userId) as any);
+  need(await db.from("story_pilot_events").delete()
+    .eq("telegram_user_id",userId)
+    .in("event_type",["message.new","message.edit","message.delete"]) as any);
+  return { deleted: deletedCount,automationStopped:true,requiresNewConsent:true };
 }
 
 

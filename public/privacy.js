@@ -2095,7 +2095,7 @@
     openSheet(`
       <span class="kicker">БЕЗВОЗВРАТНОЕ УДАЛЕНИЕ</span>
       <h2>Удалить сохранённые копии Vetogram?</h2>
-      <p>Будут удалены сохранённые сообщения, копии удалений и доступные медиа из Vetogram. Очистка беседы в обычном Telegram ЭТОГО НЕ ДЕЛАЕТ.</p>
+      <p>Будут удалены сохранённые сообщения, история правок и медиа Vetogram. Anti-Delete, сохранение сообщений и все фоновые копии будут остановлены до нового явного согласия. Оригинальные чаты Telegram не затрагиваются.</p>
       <p class="privacy-archive-limit"><strong>Это нельзя отменить.</strong> Если цель — очистить оригинальный Telegram-чат, просто закрой это окно. Vetogram-архив останется.</p>
       <label class="privacy-danger-input">Для подтверждения введи УДАЛИТЬ
         <input id="privacyConfirmDelete" type="text" autocomplete="off" autocapitalize="characters" placeholder="УДАЛИТЬ" />

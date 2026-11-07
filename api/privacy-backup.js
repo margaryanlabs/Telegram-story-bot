@@ -1,3 +1,4 @@
+import { vetogramAppUrl } from '../lib/vetogram-app-url.js';
 import { openJson } from '../lib/viewer-sync-crypto.js';
 import { validateTelegramMiniApp } from '../lib/telegram-miniapp-auth.js';
 import { getViewerSession, getPrivacySettings, updatePrivacySettings, importUserHistoryBatch, saveBackupJob, listBackupJobs, pauseBackupJob } from '../lib/viewer-sync-store.js';
@@ -13,11 +14,7 @@ function respond(res, code, data) {
 
 async function sendBackupNotice(userId, chatId, title, count) {
   if (!BOT) return false;
-  const url = new URL('https://telegram-story-bot-murex.vercel.app/studio.html');
-  url.searchParams.set('screen', 'chats');
-  url.searchParams.set('filter', 'all');
-  url.searchParams.set('chat', chatId);
-  url.searchParams.set('v', '20261016-veto-smart-inbox-v1');
+  const url = vetogramAppUrl({screen:'chats',filter:'all',chatId});
   const response = await fetch('https://api.telegram.org/bot'+BOT+'/sendMessage', {
     method:'POST',
     headers:{ 'content-type':'application/json' },
@@ -27,7 +24,7 @@ async function sendBackupNotice(userId, chatId, title, count) {
         +'\nСохранено новых сообщений в последней части: '+count
         +'\n\nКопия хранится в VETO Inbox согласно выбранному сроку хранения. Удаление чата в Telegram не удаляет эту копию. Медиа из старой истории могут быть доступны только как отметки.',
       disable_notification:false,
-      reply_markup:{ inline_keyboard:[[{ text:'Открыть сохранённый чат',web_app:{url:url.toString()} }]] },
+      reply_markup:url ? { inline_keyboard:[[{ text:'Открыть сохранённый чат',web_app:{url} }]] } : undefined,
     }),
   });
   return response.ok;
