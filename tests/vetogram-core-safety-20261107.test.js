@@ -57,3 +57,27 @@ test('Automatic post-login Business offer reports disabled server readiness and 
  assert.match(app,/Сообщения НЕ архивируются автоматически/);
  assert.match(app,/result\.state === 'storylab' && result\.diagnostics\?\.antiDelete === true/);
 });
+
+test('First onboarding always starts with explicit selection of individual chats, not all private chats',()=>{
+  const ui=read('public/privacy.js');
+  assert.match(ui,/value==='selected-private'\?'checked':''/);
+  assert.doesNotMatch(ui,/value==='all-private'\?'checked':''/);
+  assert.match(ui,/id="businessWizardChatSearch"/);
+  assert.match(ui,/data-business-chat-item/);
+  assert.match(ui,/data-business-chat-name/);
+  assert.match(ui,/Всё делается прямо в Vetogram/);
+});
+test('Post-login ready-but-unverified protection stays visible and actionable',()=>{
+  const ui=read('public/privacy.js');
+  assert.match(ui,/messageEventsProven !== true/);
+  assert.match(ui,/data-business-diagnostics="1"/);
+  assert.match(ui,/Не нужно выходить из Vetogram/);
+});
+test('Backend supports explicit in-app MTProto permission handoff and revocation truth',()=>{
+  const api=read('api/business-wizard.js');
+  assert.match(api,/canConnectInsideVetogram:true,requiresManualTelegramSettings:false/);
+  assert.match(api,/if \(action === 'disconnect' && result\?\.disconnected === true\)/);
+  assert.match(api,/updatePrivacySettings\(ownerId,\{antiDelete:false\}\)/);
+  assert.match(api,/archiveOptInRevoked/);
+  assert.match(read('lib/telegram-business-consent.js'),/new Api\.account\.UpdateConnectedBot\(/);
+});

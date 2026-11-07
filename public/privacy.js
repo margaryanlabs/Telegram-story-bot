@@ -1473,20 +1473,23 @@
         <legend>Какие чаты защищать?</legend>
         ${existing ? '<label><input type="radio" name="vetoBusinessScope" value="preserve" checked><span><b>Сохранить текущий охват и исключения</b><small>Не расширяет доступ и сохраняет действующие права.</small></span></label>' : ''}
         ${[['all-private','Все существующие и будущие','Быстрый старт: все личные чаты, включая новые. Только после согласия.'],['existing-private','Все существующие','Личные чаты, существующие при подключении'],['future-private','Все будущие','Новые личные чаты'],['contacts','Контакты','Личные чаты с контактами'],['non-contacts','Не-контакты','Личные чаты с не-контактами'],['selected-private','Только выбранные','До 12 выбранных личных чатов']].map(([value,title,detail])=>`
-          <label><input type="radio" name="vetoBusinessScope" value="${value}" ${!existing && value==='all-private'?'checked':''}><span><b>${title}</b><small>${detail}</small></span></label>`).join('')}
+          <label><input type="radio" name="vetoBusinessScope" value="${value}" ${!existing && value==='selected-private'?'checked':''}><span><b>${title}</b><small>${detail}</small></span></label>`).join('')}
       </fieldset>
+      <label class="veto-business-search-label" for="businessWizardChatSearch">Найти личный чат
+        <input id="businessWizardChatSearch" type="search" autocomplete="off" placeholder="Поиск по имени" aria-label="Найти личный чат для защиты" />
+      </label>
       <div class="veto-consent-chat-list" role="group" aria-label="Личные чаты и исключения">
-        ${chats.map(chat=>`<div class="veto-consent-chat"><span class="veto-consent-chat-copy"><strong>${escapeHtml(chat.title)}</strong></span>
+        ${chats.map(chat=>`<div class="veto-consent-chat" data-business-chat-item="1" data-business-chat-name="${escapeHtml(String(chat.title||'').toLowerCase())}"><span class="veto-consent-chat-copy"><strong>${escapeHtml(chat.title)}</strong></span>
           <label><input type="checkbox" data-business-selected value="${escapeHtml(chat.chatId)}"> Выбрать</label>
           <label><input type="checkbox" data-business-excluded value="${escapeHtml(chat.chatId)}"> Исключить</label></div>`).join('') || '<p>Нет доступных диалогов для выбора. Широкие режимы доступны после явного согласия.</p>'}
       </div>
       ${existing ? '<label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent"><span>Я подтверждаю выбранный охват личных чатов. Существующие права сохранятся; новые права выдаются только по отдельному согласию.</span></label>' : '<label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardConsent"><span><b>Выдать выбранный Business-доступ.</b> Я разрешаю подключить @Vetotg_bot только к явно выбранному охвату личных чатов. Anti-Delete и Stories включаются по отдельным согласиям ниже. Не включает группы и секретные чаты. Все разрешения можно позже отозвать.</span></label>'}
       <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardAntiDelete"><span><b>Включить Anti-Delete</b> — сохранять новые сообщения и их изменения в выбранных чатах, чтобы видеть удалённое.</span></label>
       <label class="veto-consent-checkbox"><input type="checkbox" id="businessWizardStories" ${result.rights?.manageStories?'disabled':''}><span>${result.rights?.manageStories?'Stories уже разрешены; текущий доступ сохранится.':'Отдельно разрешить публикацию, изменение и удаление Stories от моего имени.'}</span></label>
-      <p class="veto-business-choices-hint">Ни Anti-Delete, ни Stories не включаются автоматически. Можно выбрать одну возможность или обе.</p>
+      <p class="veto-business-choices-hint">Всё делается прямо в Vetogram. После твоего согласия новые сообщения выбранных чатов будут сохраняться без повторных действий. Получение событий подтвердим тестом. Stories включаются только отдельно.</p>
       <div class="veto-consent-boundary"><p>Без права отвечать, удалять сообщения, отмечать прочитанным, менять профиль, управлять подарками и средствами — при новом подключении. При существующем подключении сохраняются права, перечисленные выше.</p></div>
       <p id="businessWizardCount" aria-live="polite"></p>
-      <div class="sheet-actions"><button class="accent" data-business-apply="1" disabled>Подключить защиту</button>
+      <div class="sheet-actions"><button class="accent" data-business-apply="1" disabled>Подключить выбранные чаты</button>
         <button data-business-close="1">Позже</button>
         ${existing?'<button data-business-revoke="1">Отозвать Business-доступ…</button>':''}
         ${result.rights?.manageStories?'<button data-business-revoke-stories="1">Отозвать только Stories…</button>':''}
@@ -1520,12 +1523,20 @@
       const result = await businessWizardRequest('prepare');
       if (result.enabled === false) {
         openSheet(`<span class="kicker">VETOGRAM · ЗАЩИТА</span><h2>Автоматизация пока недоступна</h2>
-          <p>Telegram подключён, но серверный мастер защиты не активирован. Сообщения НЕ архивируются автоматически. Проверь разрешения бота в Telegram Business или вернись к настройке после восстановления сервера.</p>
-          <div class="sheet-actions"><button class="accent" data-business-manual="1">Инструкция Telegram Business</button><button data-business-close="1">Продолжить без защиты</button></div>`);
+          <p>Telegram подключён, но серверный мастер защиты пока недоступен. Сообщения НЕ архивируются автоматически. Не нужно выходить из Vetogram или вручную выдавать разрешения: повтори проверку здесь, когда сервер восстановится.</p>
+          <div class="sheet-actions"><button class="accent" data-business-retry="1">Проверить ещё раз в Vetogram</button><button data-business-close="1">Продолжить без защиты</button></div>`);
         return false;
       }
       // An existing Business connection without Anti-Delete consent is not protection.
-      if (result.state === 'storylab' && result.diagnostics?.antiDelete === true) return false;
+      if (result.state === 'storylab' && result.diagnostics?.antiDelete === true) {
+        if(result.diagnostics?.botApi !== 'verified' || result.diagnostics?.messageEventsProven !== true) {
+          openSheet(`<span class="kicker">VETOGRAM · ЗАЩИТА</span><h2>Разрешения уже выбраны</h2>
+            <p>Business-бот подключён и Anti-Delete включён в настройках. Но реальное получение и удаление сообщений ещё не подтверждены. Никаких повторных разрешений не запрашиваем.</p>
+            <div class="sheet-actions"><button class="accent" data-business-diagnostics="1">Проверить сохранение сообщений</button><button data-business-close="1">Продолжить</button></div>`);
+          return true;
+        }
+        return false;
+      }
       renderBusinessWizardPicker(result);
       return true;
     } catch {
@@ -1568,7 +1579,14 @@
     const count = $('businessWizardCount');
     if (count) count.textContent = scope==='preserve'?'Сохраним текущие чаты, исключения и права.':`Выбрано: ${scope==='selected-private'?effectiveSelected.length:'по охвату'} · исключений: ${effectiveExcluded.length}/12`;
     const button = $('sheet')?.querySelector('[data-business-apply]');
-    if (button) button.disabled = !valid;
+    if (button) {
+      button.disabled = !valid;
+      button.textContent = $('businessWizardAntiDelete')?.checked === true
+        ? 'Включить Anti-Delete для выбранных чатов'
+        : $('businessWizardStories')?.checked === true
+          ? 'Подключить Stories для выбранных чатов'
+          : 'Сохранить выбранный доступ';
+    }
   }
 
   async function applyBusinessWizard(button) {
@@ -1592,7 +1610,7 @@
       const archiveIncomplete = result.archiveConsentRequested === true && result.settingsUpdated !== true;
       const botVerified=result.delivery?.botApi==='verified';
       const rightsProof=result.delivery?.storiesPermission||'unknown';
-      openSheet(`<span class="kicker">VETOGRAM · ПРОВЕРКА</span><h2>${archiveIncomplete?'Не удалось завершить защиту':botVerified?'Подключение подтверждено':'Проверяем подключение'}</h2>
+      openSheet(`<span class="kicker">VETOGRAM · ПРОВЕРКА</span><h2>${archiveIncomplete?'Не удалось завершить защиту':botVerified?'Подключение подтверждено · проверяем события':'Проверяем подключение'}</h2>
         <p>Telegram сохранил выбранные разрешения. ${botVerified?'Подключение к аккаунту подтверждено.':'Подтверждение связи с аккаунтом ещё ожидается.'} Доступ к Stories: ${result.manageStories?'выдан':'не запрошен'}. Настройки архива: ${result.settingsUpdated?'сохранены':archiveIncomplete?'не удалось сохранить':'без изменений'}.</p>
         <p>Право управления Stories: ${rightsProof==='granted'?'подтверждено':rightsProof==='not-granted'?'не выдано':'ещё проверяется'}. Для Anti-Delete и публикации Stories нужна отдельная проверка реального события.</p>
         ${archiveIncomplete?'<p>Сервер ещё не подтвердил архивирование. Сообщения могут не сохраняться. Перепроверить подключение и настройки, не выполняя повторную запись без проверки.</p>':''}
@@ -2310,6 +2328,12 @@
   });
 
   $('sheet')?.addEventListener('input', event => {
+    if (event.target?.id === 'businessWizardChatSearch') {
+      const q=String(event.target.value||'').trim().toLocaleLowerCase('ru');
+      for(const item of $('sheet')?.querySelectorAll('[data-business-chat-item]')||[])
+        item.hidden = q!=='' && !String(item.dataset.businessChatName||'').includes(q);
+      return;
+    }
     if (event.target?.id !== 'privacyConfirmDelete') return;
     const accept = $('sheet')?.querySelector('[data-privacy-confirm-clear]');
     if (accept) accept.disabled = String(event.target.value || '').trim() !== 'УДАЛИТЬ';
